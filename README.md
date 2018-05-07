@@ -6,8 +6,9 @@
 # PWC-Net
 This is an unofficial pytorch implementation of CVPR2018 paper: Deqing Sun *et al.* **"PWC-Net: CNNs for Optical Flow Using Pyramid, Warping, and Cost Volume"**.    
 **Resources**  [arXiv](https://arxiv.org/abs/1709.02371) | [Caffe](https://github.com/deqings/PWC-Net)(official)
+
 ![](https://github.com/nameless-Chatoyant/PWC-Net_pytorch/raw/master/example/flow.png)
-(flow outputs from top to bottom, the rightest is groundtruth)
+<span style="text-align:center">(flow outputs from top to bottom, the rightest is groundtruth)</span>
 
 It starts to output reasonable flows. However, both time and performance need to be improved. Hope you have fun with this code, and feel free to share your idea about network and its hyper parameters.
 
