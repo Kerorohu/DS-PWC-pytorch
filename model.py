@@ -24,7 +24,7 @@ class Net(nn.Module):
             self.corr = Correlation(pad_size = args.search_range * 2 + 1, kernel_size = 1, max_displacement = args.search_range * 2 + 1, stride1 = 1, stride2 = 2, corr_multiply = 1).to(args.device)
         
         self.flow_estimators = []
-        for l, ch in enumerate(args.lv_chs[::-1] + [3]):
+        for l, ch in enumerate(args.lv_chs[::-1]):
             layer = OpticalFlowEstimator(args, ch + (args.search_range*2+1)**2 + 2).to(args.device)
             self.add_module(f'FlowEstimator(Lv{l})', layer)
             self.flow_estimators.append(layer)

@@ -8,13 +8,13 @@ This is an unofficial pytorch implementation of CVPR2018 paper: Deqing Sun *et a
 **Resources**  [arXiv](https://arxiv.org/abs/1709.02371) | [Caffe](https://github.com/deqings/PWC-Net)(official)
 
 ![](https://github.com/nameless-Chatoyant/PWC-Net_pytorch/raw/master/example/flow.png)
-<span style="text-align:center">(flow outputs from top to bottom, the rightest is groundtruth)</span>
+<p align="center">(flow outputs from top to bottom, the rightest is groundtruth)</p>
 
 It starts to output reasonable flows. However, both time and performance need to be improved. Hope you have fun with this code, and feel free to share your idea about network and its hyper parameters.
 
 
 # Usage
-- Requirements
+- **Requirements**
     - Python 3.6+
     - **PyTorch 0.4.0**
     - Tensorflow
@@ -64,6 +64,7 @@ It starts to output reasonable flows. However, both time and performance need to
         └── testing
         ```
 
+- **Install Correlation Package**
 - **Train**
     ```
     python3 main.py train --dataset <DATASET_NAME> --dataset_dir <DIR_NAME>

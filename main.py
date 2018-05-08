@@ -50,13 +50,15 @@ def main():
     # ============================================================
     #
     summary_parser.add_argument('--num_levels', type = int, default = 7)
-    summary_parser.add_argument('--lv_chs', nargs = '+', type = int, default = [16, 32, 64, 96, 128, 192])
+    summary_parser.add_argument('--lv_chs', nargs = '+', type = int, default = [3, 16, 32, 64, 96, 128, 192])
     summary_parser.add_argument('--input_norm', action = 'store_true')
     summary_parser.add_argument('--batch_norm', action = 'store_true')
     summary_parser.add_argument('--output_level', type = int, default = 4)
     summary_parser.add_argument('--corr', type = str, default = 'cost_volume')
     summary_parser.add_argument('--corr_activation', action = 'store_true')
     summary_parser.add_argument('-i', '--input_shape', type = int, nargs = '*', default = (3, 2, 384, 448))
+
+
     # train_parser
     # ============================================================
     # dataflow
@@ -74,10 +76,8 @@ def main():
 
     # net
     train_parser.add_argument('--num_levels', type = int, default = 7)
-    train_parser.add_argument('--lv_chs', nargs = '+', type = int, default = [16, 32, 64, 96, 128, 192])
+    train_parser.add_argument('--lv_chs', nargs = '+', type = int, default = [3, 16, 32, 64, 96, 128, 192])
     train_parser.add_argument('--corr_activation', action = 'store_true')
-    train_parser.add_argument('--use_context_network', action = 'store_true')
-    train_parser.add_argument('--use_warping_layer', action = 'store_true')
     train_parser.add_argument('--batch_norm', action = 'store_true')
 
     # loss
@@ -108,9 +108,9 @@ def main():
 
     # pred_parser
     # ============================================================
-    pred_parser.add_argument('-i', '--input', nargs = 2)
+    pred_parser.add_argument('-i', '--input', nargs = 2, required = True)
     pred_parser.add_argument('-o', '--output', default = 'output.flo')
-    pred_parser.add_argument('--load', type = str)
+    pred_parser.add_argument('--load', type = str, required = True)
 
 
 
@@ -127,7 +127,7 @@ def main():
         pass
     elif args.subparser_name == 'train':
         assert len(args.weights) >= args.output_level + 1
-        assert len(args.lv_chs) + 1 == args.num_levels
+        assert len(args.lv_chs) == args.num_levels
         assert args.dataset in ['FlyingChairs', 'FlyingThings', 'SintelFinal', 'SintelClean', 'KITTI'], 'One dataset should be correctly set as for there are specific hyper-parameters for every dataset'
     elif args.subparser_name == 'pred':
         assert args.input is not None, 'TWO input image path should be given.'
@@ -179,13 +179,11 @@ def train(args):
     # ============================================================
     data_iter = iter(train_loader)
     iter_per_epoch = len(train_loader)
-    Crit = eval(args.loss)
-    criterion = MultiScale(args)
+    criterion = eval(args.loss)(args)
 
 
     # build criterion
-    Opt = eval('torch.optim.' + args.optimizer)
-    optimizer = Opt(model.parameters(), args.lr, weight_decay = args.weight_decay)
+    optimizer = eval('torch.optim.' + args.optimizer)(model.parameters(), args.lr, weight_decay = args.weight_decay)
 
     total_loss = 0
     total_epe = 0
@@ -363,10 +361,40 @@ def pred(args):
 
 
 
-def test(args, eval_iter):
-    # TODO
-    pass
+def test(args):
+    print('load model...')
+    model = Net(args).to(args.device)
+    model.load_state_dict(torch.load(args.load))
 
+    criterion = eval(args.loss)(args)
+
+    print('build eval dataset...')
+    train_dataset, eval_dataset = eval("{0}('{1}', 'train', cropper = '{5}', crop_shape = {2}, resize_shape = {3}, resize_scale = {4}), {0}('{1}', 'test', cropper = '{5}', crop_shape = {2}, resize_shape = {3}, resize_scale = {4})".format(args.dataset, args.dataset_dir, args.crop_shape, args.resize_shape, args.resize_scale, args.crop_type))
+
+    total_batches = len(train_loader)
+
+    # logs
+    # ============================================================
+    time_logs = []; total_epe = 0
+
+
+
+    for batch_idx, (data, target) in enumerate(data_loader):
+        # Forward Pass
+        # ============================================================
+        t_start = time.time()
+        data, target = [d.to(args.device) for d in data], [t.to(args.device) for t in target]
+        with torch.no_grad():
+            flows, summaries = model(data)
+        time_logs.append(time.time() - t_start)
+
+
+
+        # Compute EPE
+        # ============================================================
+        loss, epe, loss_levels, epe_levels = criterion(flows, flow_gt)
+        total_epe += epe.item()
+        print(f'[{batch_idx}/{total_batches}]  Time: {time_logs[batch_idx]:.2f}s  EPE:{total_epe / batch_idx}')
 
 
 if __name__ == '__main__':
