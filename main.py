@@ -134,7 +134,6 @@ def hello_world(args):
     state = model.state_dict()
     for key, value in state.items():
         print(f'{key}: {value.size()}')
-    print(model.state_dict())
     print('hello world!')
 
 
