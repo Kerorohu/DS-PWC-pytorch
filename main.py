@@ -112,6 +112,12 @@ def main():
     pred_parser.add_argument('-o', '--output', default = 'output.flo')
     pred_parser.add_argument('--load', type = str, required = True)
 
+    pred_parser.add_argument('--num_levels', type = int, default = 7)
+    pred_parser.add_argument('--lv_chs', nargs = '+', type = int, default = [3, 16, 32, 64, 96, 128, 192])
+    pred_parser.add_argument('--input_norm', action = 'store_true')
+    pred_parser.add_argument('--batch_norm', action = 'store_true')
+    pred_parser.add_argument('--output_level', type = int, default = 4)
+
 
 
     # eval_parser
