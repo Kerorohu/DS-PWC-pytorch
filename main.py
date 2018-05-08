@@ -23,7 +23,7 @@ from flow_utils import (vis_flow, save_flow)
 
 
 def main():
-    parser = argparse.ArgumentParser(description='Structure from Motion Learner training on KITTI and CityScapes Dataset',
+    parser = argparse.ArgumentParser(description='',
                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     # mode selection
     # ============================================================
@@ -32,6 +32,7 @@ def main():
                                 help='additional help',  
                                 dest='subparser_name')
 
+    parser.set_defaults(func = hello_world)
     summary_parser = modes.add_parser('summary'); summary_parser.set_defaults(func = summary)
     train_parser = modes.add_parser('train'); train_parser.set_defaults(func = train)
     pred_parser = modes.add_parser('pred'); pred_parser.set_defaults(func = pred)
@@ -49,7 +50,6 @@ def main():
     parser.add_argument('--flow-norm', action = 'store_true')
 
     # pyramid args
-    parser.add_argument('--num_levels', type = int, default = 7)
     parser.add_argument('--lv_chs', nargs = '+', type = int, default = [3, 16, 32, 64, 96, 128, 192])
     parser.add_argument('--output_level', type = int, default = 4)
 
@@ -73,7 +73,7 @@ def main():
     train_parser.add_argument('--num_workers', default = 8, type = int, help = 'num of workers')
     train_parser.add_argument('--batch_size', default = 8, type=int, help='mini-batch size')
     train_parser.add_argument('--dataset_dir', type = str)
-    train_parser.add_argument('--dataset', type = str)
+    train_parser.add_argument('--dataset', type = str, choices = ['FlyingChairs', 'FlyingThings', 'SintelFinal', 'SintelClean', 'KITTI'])
 
     # loss
     train_parser.add_argument('--weights', nargs = '+', type = float, default = [0.32,0.08,0.02,0.01,0.005])
@@ -114,26 +114,19 @@ def main():
     args = parser.parse_args()
 
 
-    # check args
-    # ============================================================
-    if args.subparser_name == 'summary':
-        pass
-    elif args.subparser_name == 'train':
-        assert len(args.weights) >= args.output_level + 1
-        assert len(args.lv_chs) == args.num_levels
-        assert args.dataset in ['FlyingChairs', 'FlyingThings', 'SintelFinal', 'SintelClean', 'KITTI'], 'One dataset should be correctly set as for there are specific hyper-parameters for every dataset'
-    elif args.subparser_name == 'pred':
-        assert args.input is not None, 'TWO input image path should be given.'
-        assert args.load is not None
-    elif args.subparser_name == 'test':
-        assert not(args.train or args.predict), 'Only ONE mode should be selected.'
-        assert args.load is not None
-    else:
-        raise RuntimeError('use train/pred/test/summary to select a mode')
-    
+    args.num_levels == len(args.lv_chs)
     args.device = torch.device(args.device)
 
+
+    # check args
+    # ============================================================
+    if args.subparser_name == 'train':
+        assert len(args.weights) >= args.output_level + 1
+
     args.func(args)
+
+
+def hello_world(args): print('hello world!')
 
 
 def summary(args):
