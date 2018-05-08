@@ -129,7 +129,13 @@ def main():
     args.func(args)
 
 
-def hello_world(args): print('hello world!')
+def hello_world(args): 
+    model = Net(args).to(args.device)
+    state = model.state_dict()
+    for key, value in state.items():
+        print(f'{key}: {value}')
+    print(model.state_dict())
+    print('hello world!')
 
 
 def summary(args):
