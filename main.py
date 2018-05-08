@@ -353,7 +353,7 @@ def pred(args):
     # Forward Pass
     # ============================================================
     with torch.no_grad():
-        output_flow, flows = model(x)
+        flows, summaries = model(x)
     flow = flows[-1]
     flow = np.array(flow.data).transpose(0,2,3,1).squeeze(0)
     save_flow(args.output, flow)
