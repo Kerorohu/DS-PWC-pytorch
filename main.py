@@ -373,7 +373,7 @@ def test(args):
     model.load_state_dict(torch.load(args.load))
 
     print('build eval dataset...')
-    test_dataset = eval(args.dataset)(args.dataset_dir, 'test', cropper = args.crop_type, crop_shape = args.crop_shape, resize_shape = args.resize_shape, resize_scale = args.resize_scale)
+    test_dataset = eval(args.dataset)(args.dataset_dir, 'test')
     test_loader = DataLoader(test_dataset,
                             batch_size = 1,
                             shuffle = True,
