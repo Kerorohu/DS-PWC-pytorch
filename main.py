@@ -340,15 +340,14 @@ def pred(args):
     x1_raw = x1_raw[np.newaxis,:,:,:].transpose(0,3,1,2)
     x2_raw = x2_raw[np.newaxis,:,:,:].transpose(0,3,1,2)
 
-
-    x1_raw = torch.Tensor(x1_raw).to(args.device)
-    x2_raw = torch.Tensor(x2_raw).to(args.device)
+    x = np.stack([x1_raw, x2_raw], axis = 2)
+    x = torch.Tensor(x).to(args.device)
     
 
     # Forward Pass
     # ============================================================
     with torch.no_grad():
-        output_flow, flows = model(x1_raw, x2_raw)
+        output_flow, flows = model(x)
     flow = flows[-1]
     flow = np.array(flow.data).transpose(0,2,3,1).squeeze(0)
     save_flow(args.output, flow)
