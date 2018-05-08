@@ -130,11 +130,15 @@ def main():
 
 
 def hello_world(args): 
+    from functools import reduce
+    from operator import mul
     model = Net(args).to(args.device)
     state = model.state_dict()
+    total_size = 0
     for key, value in state.items():
         print(f'{key}: {value.size()}')
-    print('hello world!')
+        total_size += reduce(mul, value.size())
+    print(total_size)
 
 
 def summary(args):

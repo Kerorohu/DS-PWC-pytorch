@@ -23,7 +23,7 @@ It starts to output reasonable flows. However, both time and performance need to
 - **Get Started with Demo**    
     Note that we only save weights of parameters instead of entire network, provided model file is for default configs, we may upload more advanced models in the future.
     ```
-    python3 main.py predict --load models/best.pkl -i example/1.png example/2.png -o example/output.flo
+    python3 main.py pred --load models/best.pkl -i example/1.png example/2.png -o example/output.flo
     ```
 
 - **Prepare Datasets**
@@ -65,6 +65,7 @@ It starts to output reasonable flows. However, both time and performance need to
         ```
 
 - **Install Correlation Package**
+    If you want to use correlation layer (`--corr Correlation`), please follow [NVIDIA/flownet2-pytorch](https://github.com/NVIDIA/flownet2-pytorch) to install extra packages.
 - **Train**
     ```
     python3 main.py train --dataset <DATASET_NAME> --dataset_dir <DIR_NAME>
