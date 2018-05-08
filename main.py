@@ -138,7 +138,7 @@ def hello_world(args):
     for key, value in state.items():
         print(f'{key}: {value.size()}')
         total_size += reduce(mul, value.size())
-    print(f'{total_size * 4 / 1024 / 1024} MB')
+    print(f'Parameters: {total_size} Size: {total_size * 4 / 1024 / 1024} MB')
 
 
 def summary(args):
