@@ -396,7 +396,7 @@ def test(args):
         t_start = time.time()
         data, target = [d.to(args.device) for d in data], [t.to(args.device) for t in target]
         with torch.no_grad():
-            flows, summaries = model(data)
+            flows, summaries = model(data[0])
         time_logs.append(time.time() - t_start)
 
 
