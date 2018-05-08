@@ -114,7 +114,7 @@ def main():
     args = parser.parse_args()
 
 
-    args.num_levels == len(args.lv_chs)
+    args.num_levels = len(args.lv_chs)
     args.device = torch.device(args.device)
 
 
