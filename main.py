@@ -58,6 +58,9 @@ def main():
     parser.add_argument('--search_range', type = int, default = 4)
     parser.add_argument('--corr_activation', action = 'store_true')
 
+    # flow estimator
+    parser.add_argument('--residual', action = 'store_true')
+
     # args for summary
     # ============================================================
     summary_parser.add_argument('-i', '--input_shape', type = int, nargs = '*', default = (3, 2, 384, 448))
