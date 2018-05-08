@@ -66,7 +66,7 @@ def main():
     summary_parser.add_argument('-i', '--input_shape', type = int, nargs = '*', default = (3, 2, 384, 448))
 
 
-    # train_parser
+    # args for train
     # ============================================================
     # dataflow
     train_parser.add_argument('--crop_type', type = str, default = 'random')
@@ -82,7 +82,7 @@ def main():
     train_parser.add_argument('--weights', nargs = '+', type = float, default = [0.32,0.08,0.02,0.01,0.005])
     train_parser.add_argument('--epsilon', default = 0.02)
     train_parser.add_argument('--q', type = int, default = 0.4)
-    train_parser.add_argument('--loss', type = str, default = 'MultiScale')
+    train_parser.add_argument('--loss', type = str, default = 'MultiScale', choices = ['MultiScale'])
     train_parser.add_argument('--optimizer', type = str, default = 'Adam')
     
     # optimize
@@ -104,13 +104,13 @@ def main():
 
 
 
-    # pred_parser
+    # args for predict
     # ============================================================
     pred_parser.add_argument('-i', '--input', nargs = 2, required = True)
     pred_parser.add_argument('-o', '--output', default = 'output.flo')
     pred_parser.add_argument('--load', type = str, required = True)
 
-    # eval_parser
+    # args for test
     # ============================================================
     test_parser.add_argument('--load', type = str)
 
@@ -144,8 +144,9 @@ def train(args):
 
     # Prepare Dataloader
     # ============================================================
-    train_dataset, eval_dataset = eval("{0}('{1}', 'train', cropper = '{5}', crop_shape = {2}, resize_shape = {3}, resize_scale = {4}), {0}('{1}', 'test', cropper = '{5}', crop_shape = {2}, resize_shape = {3}, resize_scale = {4})".format(args.dataset, args.dataset_dir, args.crop_shape, args.resize_shape, args.resize_scale, args.crop_type))
-
+    train_dataset = eval(args.dataset)(args.dataset_dir, 'train', cropper = args.crop_type, crop_shape = args.crop_shape, resize_shape = args.resize_shape, resize_scale = args.resize_scale)
+    eval_dataset = eval(args.dataset)(args.dataset_dir, 'test', cropper = args.crop_type, crop_shape = args.crop_shape, resize_shape = args.resize_shape, resize_scale = args.resize_scale)
+    
     train_loader = DataLoader(train_dataset,
                             batch_size = args.batch_size,
                             shuffle = True,
