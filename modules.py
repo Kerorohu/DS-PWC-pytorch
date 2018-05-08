@@ -81,7 +81,7 @@ class FeaturePyramidExtractor(nn.Module):
         self.args = args
 
         self.convs = []
-        for l, (ch_in, ch_out) in enumerate(zip(args.lv_chs[:-1], args.lv_chs[1:]):
+        for l, (ch_in, ch_out) in enumerate(zip(args.lv_chs[:-1], args.lv_chs[1:])):
             layer = nn.Sequential(
                 conv(args.batch_norm, ch_in, ch_out, stride = 2),
                 conv(args.batch_norm, ch_out, ch_out)
