@@ -70,6 +70,13 @@ class BaseDataset(Dataset, metaclass = ABCMeta):
             resizer = partial(cv2.resize, dsize = (0,0), fx = self.resize_scale, fy = self.resize_scale)
             images = list(map(resizer, images))
             flow = resizer(flow)
+        
+        if self.train_or_test == 'test':
+            H, W = img1.shape[:2]
+            img1, img2 = images
+            img1 = np.pad(img1, ((0, (64 - H % 64) if H % 64 else 0), (0, (64 - W % 64) if H % 64 else 0), (0, 0)), mode = 'constant')
+            img2 = np.pad(img2, ((0, (64 - H % 64) if H % 64 else 0), (0, (64 - W % 64) if H % 64 else 0), (0, 0)), mode = 'constant')
+            images = [img1, img2]
 
         images = np.array(images).transpose(3,0,1,2)
         flow = flow.transpose(2,0,1)
