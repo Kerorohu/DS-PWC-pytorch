@@ -43,6 +43,11 @@ def main():
     # ============================================================
     parser.add_argument('--device', type = str, default = 'cuda')
 
+    # dataset
+    parser.add_argument('--num_workers', default = 8, type = int, help = 'num of workers')
+    parser.add_argument('--dataset_dir', type = str)
+    parser.add_argument('--dataset', type = str, choices = ['FlyingChairs', 'FlyingThings', 'SintelFinal', 'SintelClean', 'KITTI'])
+
     # normalization args
     parser.add_argument('--input-norm', action = 'store_true')
     parser.add_argument('--rgb_max', type = float, default = 255)
@@ -73,10 +78,8 @@ def main():
     train_parser.add_argument('--crop_shape', type = int, nargs = '+', default = [384, 448])
     train_parser.add_argument('--resize_shape', nargs = 2, type = int, default = None)
     train_parser.add_argument('--resize_scale', type = float, default = None)
-    train_parser.add_argument('--num_workers', default = 8, type = int, help = 'num of workers')
+    
     train_parser.add_argument('--batch_size', default = 8, type=int, help='mini-batch size')
-    train_parser.add_argument('--dataset_dir', type = str)
-    train_parser.add_argument('--dataset', type = str, choices = ['FlyingChairs', 'FlyingThings', 'SintelFinal', 'SintelClean', 'KITTI'])
 
     # loss
     train_parser.add_argument('--weights', nargs = '+', type = float, default = [0.32,0.08,0.02,0.01,0.005])
@@ -113,8 +116,6 @@ def main():
     # args for test
     # ============================================================
     test_parser.add_argument('--load', type = str)
-    test_parser.add_argument('--dataset_dir', type = str)
-    test_parser.add_argument('--dataset', type = str, choices = ['FlyingChairs', 'FlyingThings', 'SintelFinal', 'SintelClean', 'KITTI'])
 
     args = parser.parse_args()
 
