@@ -45,8 +45,6 @@ def main():
 
     # dataset
     parser.add_argument('--num_workers', default = 8, type = int, help = 'num of workers')
-    parser.add_argument('--dataset_dir', type = str)
-    parser.add_argument('--dataset', type = str, choices = ['FlyingChairs', 'FlyingThings', 'SintelFinal', 'SintelClean', 'KITTI'])
 
     # normalization args
     parser.add_argument('--input-norm', action = 'store_true')
@@ -80,6 +78,8 @@ def main():
     train_parser.add_argument('--resize_scale', type = float, default = None)
     
     train_parser.add_argument('--batch_size', default = 8, type=int, help='mini-batch size')
+    train_parser.add_argument('--dataset_dir', type = str, required = True)
+    train_parser.add_argument('--dataset', type = str, choices = ['FlyingChairs', 'FlyingThings', 'SintelFinal', 'SintelClean', 'KITTI'], required = True)
 
     # loss
     train_parser.add_argument('--weights', nargs = '+', type = float, default = [0.32,0.08,0.02,0.01,0.005])
@@ -115,7 +115,9 @@ def main():
 
     # args for test
     # ============================================================
-    test_parser.add_argument('--load', type = str)
+    test_parser.add_argument('--load', type = str, required = True)
+    test_parser.add_argument('--dataset_dir', type = str, required = True)
+    test_parser.add_argument('--dataset', type = str, choices = ['FlyingChairs', 'FlyingThings', 'SintelFinal', 'SintelClean', 'KITTI'], required = True)
 
     args = parser.parse_args()
 

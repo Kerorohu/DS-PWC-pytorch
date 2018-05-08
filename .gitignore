@@ -4,8 +4,6 @@ example/output.flo
 
 *mpi*
 
-data_test.txt
-data_train.txt
 train_log*
 
 datasets*
