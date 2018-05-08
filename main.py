@@ -37,25 +37,29 @@ def main():
     pred_parser = modes.add_parser('pred'); pred_parser.set_defaults(func = pred)
     test_parser = modes.add_parser('eval'); test_parser.set_defaults(func = test)
 
-    # public_parser
+
+    # shared args
     # ============================================================
-    parser.add_argument('--search_range', type = int, default = 4)
     parser.add_argument('--device', type = str, default = 'cuda')
+
+    # normalization args
+    parser.add_argument('--input-norm', action = 'store_true')
     parser.add_argument('--rgb_max', type = float, default = 255)
-    parser.add_argument('--residual', action = 'store_true')
-    parser.add_argument('--flow_norm', action = 'store_true')
+    parser.add_argument('--batch-norm', action = 'store_true')
+    parser.add_argument('--flow-norm', action = 'store_true')
 
+    # pyramid args
+    parser.add_argument('--num_levels', type = int, default = 7)
+    parser.add_argument('--lv_chs', nargs = '+', type = int, default = [3, 16, 32, 64, 96, 128, 192])
+    parser.add_argument('--output_level', type = int, default = 4)
 
-    # summary parser
+    # correlation args
+    parser.add_argument('--corr', type = str, default = 'cost_volume')
+    parser.add_argument('--search_range', type = int, default = 4)
+    parser.add_argument('--corr_activation', action = 'store_true')
+
+    # args for summary
     # ============================================================
-    #
-    summary_parser.add_argument('--num_levels', type = int, default = 7)
-    summary_parser.add_argument('--lv_chs', nargs = '+', type = int, default = [3, 16, 32, 64, 96, 128, 192])
-    summary_parser.add_argument('--input_norm', action = 'store_true')
-    summary_parser.add_argument('--batch_norm', action = 'store_true')
-    summary_parser.add_argument('--output_level', type = int, default = 4)
-    summary_parser.add_argument('--corr', type = str, default = 'cost_volume')
-    summary_parser.add_argument('--corr_activation', action = 'store_true')
     summary_parser.add_argument('-i', '--input_shape', type = int, nargs = '*', default = (3, 2, 384, 448))
 
 
@@ -70,15 +74,6 @@ def main():
     train_parser.add_argument('--batch_size', default = 8, type=int, help='mini-batch size')
     train_parser.add_argument('--dataset_dir', type = str)
     train_parser.add_argument('--dataset', type = str)
-    train_parser.add_argument('--output_level', type = int, default = 4)
-    train_parser.add_argument('--input_norm', action = 'store_true')
-    train_parser.add_argument('--corr', type = str, default = 'cost_volume')
-
-    # net
-    train_parser.add_argument('--num_levels', type = int, default = 7)
-    train_parser.add_argument('--lv_chs', nargs = '+', type = int, default = [3, 16, 32, 64, 96, 128, 192])
-    train_parser.add_argument('--corr_activation', action = 'store_true')
-    train_parser.add_argument('--batch_norm', action = 'store_true')
 
     # loss
     train_parser.add_argument('--weights', nargs = '+', type = float, default = [0.32,0.08,0.02,0.01,0.005])
@@ -112,14 +107,6 @@ def main():
     pred_parser.add_argument('-o', '--output', default = 'output.flo')
     pred_parser.add_argument('--load', type = str, required = True)
 
-    pred_parser.add_argument('--num_levels', type = int, default = 7)
-    pred_parser.add_argument('--lv_chs', nargs = '+', type = int, default = [3, 16, 32, 64, 96, 128, 192])
-    pred_parser.add_argument('--input_norm', action = 'store_true')
-    pred_parser.add_argument('--batch_norm', action = 'store_true')
-    pred_parser.add_argument('--output_level', type = int, default = 4)
-
-
-
     # eval_parser
     # ============================================================
     test_parser.add_argument('--load', type = str)
@@ -142,7 +129,7 @@ def main():
         assert not(args.train or args.predict), 'Only ONE mode should be selected.'
         assert args.load is not None
     else:
-        raise RuntimeError('use train/predict/test to select a mode')
+        raise RuntimeError('use train/pred/test/summary to select a mode')
     
     args.device = torch.device(args.device)
 
