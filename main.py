@@ -403,7 +403,7 @@ def test(args):
 
         # Compute EPE
         # ============================================================
-        epe = EPE(flows, flow_gt)
+        epe = EPE(flows, target[0])
         total_epe += epe.item()
         print(f'[{batch_idx}/{total_batches}]  Time: {time_logs[batch_idx]:.2f}s  EPE:{total_epe / batch_idx}')
 
