@@ -326,16 +326,16 @@ def pred(args):
     x1_raw = np.array(x1_raw)
     x2_raw = np.array(x2_raw)
 
-    if args.crop_shape is not None:
-        cropper = StaticCenterCrop(x1_raw.shape[:2], args.crop_shape)
-        x1_raw = cropper(x1_raw)
-        x2_raw = cropper(x2_raw)
-    if args.resize_shape is not None:
-        resizer = partial(cv2.resize, dsize = (0,0), dst = args.resize_shape)
-        x1_raw, x2_raw = map(resizer, [x1_raw, x2_raw])
-    elif args.resize_scale is not None:
-        resizer = partial(cv2.resize, dsize = (0,0), fx = args.resize_scale, fy = args.resize_scale)
-        x1_raw, x2_raw = map(resizer, [x1_raw, x2_raw])
+    # if args.crop_shape is not None:
+    #     cropper = StaticCenterCrop(x1_raw.shape[:2], args.crop_shape)
+    #     x1_raw = cropper(x1_raw)
+    #     x2_raw = cropper(x2_raw)
+    # if args.resize_shape is not None:
+    #     resizer = partial(cv2.resize, dsize = (0,0), dst = args.resize_shape)
+    #     x1_raw, x2_raw = map(resizer, [x1_raw, x2_raw])
+    # elif args.resize_scale is not None:
+    #     resizer = partial(cv2.resize, dsize = (0,0), fx = args.resize_scale, fy = args.resize_scale)
+    #     x1_raw, x2_raw = map(resizer, [x1_raw, x2_raw])
 
     x1_raw = x1_raw[np.newaxis,:,:,:].transpose(0,3,1,2)
     x2_raw = x2_raw[np.newaxis,:,:,:].transpose(0,3,1,2)
