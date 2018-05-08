@@ -86,7 +86,7 @@ class FeaturePyramidExtractor(nn.Module):
                 conv(args.batch_norm, ch_in, ch_out, stride = 2),
                 conv(args.batch_norm, ch_out, ch_out)
             )
-            self.add_module(f'Feature(Lv{l + 1})', layer)
+            self.add_module(f'Feature(Lv{l})', layer)
             self.convs.append(layer)
 
     def forward(self, x):
