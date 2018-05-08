@@ -340,8 +340,8 @@ def pred(args):
     # pad to multiples of 64
     H, W = x1_raw.shape[:2]
     print(x1_raw.shape)
-    x1_raw = np.pad(x1_raw, ((0, (64 - H % 64) if H % 64 else 0), (0, (64 - W % 64) if H % 64 else 0)), mode = 'constant')
-    x2_raw = np.pad(x2_raw, ((0, (64 - H % 64) if H % 64 else 0), (0, (64 - W % 64) if H % 64 else 0)), mode = 'constant')
+    x1_raw = np.pad(x1_raw, ((0, (64 - H % 64) if H % 64 else 0), (0, (64 - W % 64) if H % 64 else 0), (0, 0)), mode = 'constant')
+    x2_raw = np.pad(x2_raw, ((0, (64 - H % 64) if H % 64 else 0), (0, (64 - W % 64) if H % 64 else 0), (0, 0)), mode = 'constant')
 
     x1_raw = x1_raw[np.newaxis,:,:,:].transpose(0,3,1,2)
     x2_raw = x2_raw[np.newaxis,:,:,:].transpose(0,3,1,2)
