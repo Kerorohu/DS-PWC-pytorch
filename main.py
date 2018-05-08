@@ -12,7 +12,7 @@ from torch.utils.data import DataLoader
 import time
 
 from model import Net
-from losses import L1loss, L2loss, training_loss, robust_training_loss, MultiScale
+from losses import L1loss, L2loss, training_loss, robust_training_loss, MultiScale, EPE
 from dataset import (FlyingChairs, FlyingThings, Sintel, SintelFinal, SintelClean, KITTI)
 
 import tensorflow as tf
@@ -370,12 +370,16 @@ def test(args):
     model = Net(args).to(args.device)
     model.load_state_dict(torch.load(args.load))
 
-    criterion = eval(args.loss)(args)
-
     print('build eval dataset...')
-    train_dataset, eval_dataset = eval("{0}('{1}', 'train', cropper = '{5}', crop_shape = {2}, resize_shape = {3}, resize_scale = {4}), {0}('{1}', 'test', cropper = '{5}', crop_shape = {2}, resize_shape = {3}, resize_scale = {4})".format(args.dataset, args.dataset_dir, args.crop_shape, args.resize_shape, args.resize_scale, args.crop_type))
+    test_dataset = eval(args.dataset)(args.dataset_dir, 'test', cropper = args.crop_type, crop_shape = args.crop_shape, resize_shape = args.resize_shape, resize_scale = args.resize_scale)
+    test_loader = DataLoader(test_dataset,
+                            batch_size = 1,
+                            shuffle = True,
+                            num_workers = args.num_workers,
+                            pin_memory = True)
 
-    total_batches = len(train_loader)
+
+    total_batches = len(test_loader)
 
     # logs
     # ============================================================
@@ -383,7 +387,7 @@ def test(args):
 
 
 
-    for batch_idx, (data, target) in enumerate(data_loader):
+    for batch_idx, (data, target) in enumerate(test_loader):
         # Forward Pass
         # ============================================================
         t_start = time.time()
@@ -396,7 +400,7 @@ def test(args):
 
         # Compute EPE
         # ============================================================
-        loss, epe, loss_levels, epe_levels = criterion(flows, flow_gt)
+        epe = EPE(flows, flow_gt)
         total_epe += epe.item()
         print(f'[{batch_idx}/{total_batches}]  Time: {time_logs[batch_idx]:.2f}s  EPE:{total_epe / batch_idx}')
 
