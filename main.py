@@ -113,6 +113,8 @@ def main():
     # args for test
     # ============================================================
     test_parser.add_argument('--load', type = str)
+    test_parser.add_argument('--dataset_dir', type = str)
+    test_parser.add_argument('--dataset', type = str, choices = ['FlyingChairs', 'FlyingThings', 'SintelFinal', 'SintelClean', 'KITTI'])
 
     args = parser.parse_args()
 
