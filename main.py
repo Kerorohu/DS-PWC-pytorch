@@ -337,6 +337,12 @@ def pred(args):
     #     resizer = partial(cv2.resize, dsize = (0,0), fx = args.resize_scale, fy = args.resize_scale)
     #     x1_raw, x2_raw = map(resizer, [x1_raw, x2_raw])
 
+    # pad to multiples of 64
+    H, W = x1_raw.shape[:2]
+
+    x1_raw = np.pad(x1_raw, ((0, H + (64 - H % 64) if H % 64 else 0), (0, W + (64 - W % 64) if H % 64 else 0)), mode = 'constant')
+    x2_raw = np.pad(x2_raw, ((0, H + (64 - H % 64) if H % 64 else 0), (0, W + (64 - W % 64) if H % 64 else 0)), mode = 'constant')
+
     x1_raw = x1_raw[np.newaxis,:,:,:].transpose(0,3,1,2)
     x2_raw = x2_raw[np.newaxis,:,:,:].transpose(0,3,1,2)
 
