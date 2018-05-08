@@ -28,12 +28,12 @@ class Net(nn.Module):
             layer = OpticalFlowEstimator(args, ch + (args.search_range*2+1)**2 + 2).to(args.device)
             self.add_module(f'FlowEstimator(Lv{l})', layer)
             self.flow_estimators.append(layer)
-        self.context_network = ContextNetwork(args, 3 + 2).to(args.device)
-        # self.context_networks = []
-        # for l, ch in enumerate(args.lv_chs[::-1]):
-        #     layer = ContextNetwork(args, ch + 2).to(args.device)
-        #     self.add_module(f'ContextNetwork(Lv{l})', layer)
-        #     self.context_networks.append(layer)
+        
+        self.context_networks = []
+        for l, ch in enumerate(args.lv_chs[::-1]):
+            layer = ContextNetwork(args, ch + 2).to(args.device)
+            self.add_module(f'ContextNetwork(Lv{l})', layer)
+            self.context_networks.append(layer)
 
         # init
         for m in self.modules():
@@ -97,18 +97,16 @@ class Net(nn.Module):
             #     flow = flow_coarse + flow_fine
             # else:
             
+            flow_fine = self.context_networks[l](torch.cat([x1, flow], dim = 1))
+            flow = flow_coarse + flow_fine
+
 
             if l == args.output_level:
-                flow = F.upsample(flow_coarse, scale_factor = 2 ** (args.num_levels - args.output_level - 1), mode = 'bilinear') * 2 ** (args.num_levels - args.output_level - 1)
-                # print(x1_pyramid.size(), flow_coarse.size())
-                flow_fine = self.context_network(torch.cat([x1_pyramid[-1], flow], dim = 1))
-                flow = flow + flow_fine
+                flow = F.upsample(flow, scale_factor = 2 ** (args.num_levels - args.output_level - 1), mode = 'bilinear') * 2 ** (args.num_levels - args.output_level - 1)
                 flows.append(flow)
                 summaries['x2_warps'].append(x2_warp.data)
                 break
             else:
-                flow = flow_coarse
-                # collect
                 flows.append(flow)
                 summaries['x2_warps'].append(x2_warp.data)
 
