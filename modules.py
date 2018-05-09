@@ -50,28 +50,25 @@ class CostVolumeLayer(nn.Module):
         self.search_range = args.search_range
 
     
-    def forward(self, src, tgt):
+    def forward(self, x1, x2):
         args = self.args
 
         shape = list(src.size()); shape[1] = (self.search_range * 2 + 1) ** 2
-        output = torch.zeros(shape).to(args.device)
-        output[:,0] = (tgt*src).sum(1)
+        cv = torch.zeros(shape).to(args.device)
 
-        I = 1
-        for i in range(1, self.search_range + 1):
-            # tgt下移i像素并补0, src与之对应的部分为i之后的像素, output的上i个像素为0
-            output[:,I,i:,:] = (tgt[:,:,:-i,:] * src[:,:,i:,:]).sum(1); I += 1
-            output[:,I,:-i,:] = (tgt[:,:,i:,:] * src[:,:,:-i,:]).sum(1); I += 1
-            output[:,I,:,i:] = (tgt[:,:,:,:-i] * src[:,:,:,i:]).sum(1); I += 1
-            output[:,I,:,:-i] = (tgt[:,:,:,i:] * src[:,:,:,:-i]).sum(1); I += 1
+        for i in range(-search_range, search_range + 1):
+            for j in range(-search_range, search_range + 1):
+                if   i < 0: slice_h, slice_h_r = slice(None, i), slice(-i, None)
+                elif i > 0: slice_h, slice_h_r = slice(i, None), slice(None, -i)
+                else:       slice_h, slice_h_r = slice(None),    slice(None)
 
-            for j in range(1, self.search_range + 1):
-                output[:,I,i:,j:] = (tgt[:,:,:-i,:-j] * src[:,:,i:,j:]).sum(1); I += 1
-                output[:,I,:-i,:-j] = (tgt[:,:,i:,j:] * src[:,:,:-i,:-j]).sum(1); I += 1
-                output[:,I,i:,:-j] = (tgt[:,:,:-i,j:] * src[:,:,i:,:-j]).sum(1); I += 1
-                output[:,I,:-i,j:] = (tgt[:,:,i:,:-j] * src[:,:,:-i,j:]).sum(1); I += 1
+                if   j < 0: slice_w, slice_w_r = slice(None, j), slice(-j, None)
+                elif j > 0: slice_w, slice_w_r = slice(j, None), slice(None, -j)
+                else:       slice_w, slice_w_r = slice(None),    slice(None)
 
-        return output / shape[1]
+                cv[:, (search_range*2+1) * i + j, slice_h, slice_w] = (x1[:,:,slice_h, slice_w]  * x2[:,:,slice_h_r, slice_w_r]).sum(1)
+    
+        return cv / shape[1]
 
 
 class FeaturePyramidExtractor(nn.Module):
