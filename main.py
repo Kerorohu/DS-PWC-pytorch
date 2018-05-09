@@ -50,7 +50,6 @@ def main():
     parser.add_argument('--input-norm', action = 'store_true')
     parser.add_argument('--rgb_max', type = float, default = 255)
     parser.add_argument('--batch-norm', action = 'store_true')
-    parser.add_argument('--flow-norm', action = 'store_true')
 
     # pyramid args
     parser.add_argument('--lv_chs', nargs = '+', type = int, default = [3, 16, 32, 64, 96, 128, 192])
@@ -104,8 +103,6 @@ def main():
     train_parser.add_argument('--gif_output', type = str, default = 'gif')
     train_parser.add_argument('--gif_interval', type = int, default = 100)
     train_parser.add_argument('--max_output', type = int, default = 3)
-
-
 
     # args for predict
     # ============================================================

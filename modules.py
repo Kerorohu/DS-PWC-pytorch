@@ -113,15 +113,7 @@ class OpticalFlowEstimator(nn.Module):
         )
 
     def forward(self, x):
-        args = self.args
-        if args.flow_norm:
-            output = F.tanh(self.convs(x))
-            new_output = torch.zeros_like(output)
-            new_output[:,0,:,:] = output[:,0,:,:] * ((x.size(3) - 1.0) / 2.0)
-            new_output[:,1,:,:] = output[:,1,:,:] * ((x.size(3) - 1.0) / 2.0)
-            return new_output
-        else:
-            return self.convs(x)
+        return self.convs(x)
 
 
 class ContextNetwork(nn.Module):
