@@ -8,16 +8,16 @@ import sys
 from utils import get_grid
 
 
-def conv(batch_norm, in_planes, out_planes, kernel_size=3, stride=1):
+def conv(batch_norm, in_planes, out_planes, kernel_size = 3, stride = 1, dilation = 1):
     if batch_norm:
         return nn.Sequential(
-            nn.Conv2d(in_planes, out_planes, kernel_size=kernel_size, stride=stride, padding=(kernel_size-1)//2, bias=False),
+            nn.Conv2d(in_planes, out_planes, kernel_size = kernel_size, stride = stride, dilation = dilation, padding = ((kernel_size - 1) * dilation) // 2, bias=False),
             nn.BatchNorm2d(out_planes),
             nn.LeakyReLU(0.1,inplace=True)
         )
     else:
         return nn.Sequential(
-            nn.Conv2d(in_planes, out_planes, kernel_size=kernel_size, stride=stride, padding=(kernel_size-1)//2, bias=True),
+            nn.Conv2d(in_planes, out_planes, kernel_size = kernel_size, stride = stride, dilation = dilation, padding = ((kernel_size - 1) * dilation) // 2, bias=True),
             nn.LeakyReLU(0.1,inplace=True)
         )
 
@@ -121,19 +121,13 @@ class ContextNetwork(nn.Module):
         self.args = args
 
         self.convs = nn.Sequential(
-            nn.Conv2d(in_channels = ch_in, out_channels = 128, kernel_size = 3, stride = 1, padding = 1, dilation = 1, groups = 1, bias = True),
-            nn.LeakyReLU(inplace = True),
-            nn.Conv2d(in_channels = 128, out_channels = 128, kernel_size = 3, stride = 1, padding = 2, dilation = 2, groups = 1, bias = True),
-            nn.LeakyReLU(inplace = True),
-            nn.Conv2d(in_channels = 128, out_channels = 128, kernel_size = 3, stride = 1, padding = 4, dilation = 4, groups = 1, bias = True),
-            nn.LeakyReLU(inplace = True),
-            nn.Conv2d(in_channels = 128, out_channels = 96, kernel_size = 3, stride = 1, padding = 8, dilation = 8, groups = 1, bias = True),
-            nn.LeakyReLU(inplace = True),
-            nn.Conv2d(in_channels = 96, out_channels = 64, kernel_size = 3, stride = 1, padding = 16, dilation = 16, groups = 1, bias = True),
-            nn.LeakyReLU(inplace = True),
-            nn.Conv2d(in_channels = 64, out_channels = 32, kernel_size = 3, stride = 1, padding = 1, dilation = 1, groups = 1, bias = True),
-            nn.LeakyReLU(inplace = True),
-            nn.Conv2d(in_channels = 32, out_channels = 2, kernel_size = 3, stride = 1, padding = 1, dilation = 1, groups = 1, bias = True)
+            conv(args.batch_norm, ch_in, 128, 3, 1, 1),
+            conv(args.batch_norm, 128, 128, 3, 1, 2),
+            conv(args.batch_norm, 128, 128, 3, 1, 4),
+            conv(args.batch_norm, 128, 96, 3, 1, 8),
+            conv(args.batch_norm, 96, 64, 3, 1, 16),
+            conv(args.batch_norm, 64, 32, 3, 1, 1),
+            conv(args.batch_norm, 32, 2, 3, 1, 1)
         )
     
     def forward(self, x):
