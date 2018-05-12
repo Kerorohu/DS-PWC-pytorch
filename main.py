@@ -153,6 +153,8 @@ def train(args):
     # Build Model
     # ============================================================
     model = Net(args).to(args.device)
+    if args.load is not None:
+        model.load_state_dict(torch.load(args.load))
 
     # Prepare Dataloader
     # ============================================================
