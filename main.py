@@ -75,6 +75,7 @@ def main():
     train_parser.add_argument('--crop_shape', type = int, nargs = '+', default = [384, 448])
     train_parser.add_argument('--resize_shape', nargs = 2, type = int, default = None)
     train_parser.add_argument('--resize_scale', type = float, default = None)
+    train_parser.add_argument('--load', type = str, default = None)
     
     train_parser.add_argument('--batch_size', default = 8, type=int, help='mini-batch size')
     train_parser.add_argument('--dataset_dir', type = str, required = True)
