@@ -73,5 +73,20 @@ It starts to output reasonable flows. However, both time and performance need to
 
 
 # Details
-## Network Parameters
-Parameters: 8623340 Size: 32.89543151855469 MB
+If there is any difference between your implementation and mine, please create an issue or something.
+- Network Parameters
+    ```
+    Parameters: 8623340 Size: 32.89543151855469 MB
+    ```
+- Training Logs
+    ```
+    Step [100/800000], Loss: 0.3301, EPE: 42.0071, Forward: 34.287192821502686 ms, Backward: 181.38124704360962 ms
+    Step [200/800000], Loss: 0.2359, EPE: 28.7398, Forward: 32.04517364501953 ms, Backward: 182.32821941375732 ms
+    Step [300/800000], Loss: 0.2009, EPE: 24.3589, Forward: 31.214130719502766 ms, Backward: 182.9234480857849 ms
+    Step [400/800000], Loss: 0.1802, EPE: 21.8847, Forward: 31.183505654335022 ms, Backward: 183.74325275421143 ms
+    Step [500/800000], Loss: 0.1674, EPE: 20.4151, Forward: 30.955915451049805 ms, Backward: 183.9722876548767 ms
+    Step [600/800000], Loss: 0.1583, EPE: 19.3853, Forward: 30.943967501322426 ms, Backward: 184.35366868972778 ms
+    Step [700/800000], Loss: 0.1519, EPE: 18.6664, Forward: 30.953510829380583 ms, Backward: 184.56024714878626 ms
+    Step [800/800000], Loss: 0.1462, EPE: 18.0256, Forward: 30.91249644756317 ms, Backward: 184.76592779159546 ms
+    ```
+
