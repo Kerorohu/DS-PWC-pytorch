@@ -23,7 +23,7 @@ It starts to output reasonable flows. However, both time and performance need to
 - **Get Started with Demo**    
     Note that we only save weights of parameters instead of entire network, provided model file is for default configs, we may upload more advanced models in the future.
     ```
-    python3 main.py --input_norm --batch_norm --residual --corr_activation pred --load example/best.pkl -i example/1.png example/2.png -o example/output.flo
+    python3 main.py --input_norm --batch_norm --residual --corr Correlation --corr_activation pred --load example/SintelFinal-200K-noBN_SintelFinal-148K-BN.pkl -i example/1.png example/2.png -o example/output.flo
     ```
 
 - **Prepare Datasets**
