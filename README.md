@@ -1,3 +1,6 @@
+# News
+Official version(Caffe & PyTorch) is at https://github.com/NVlabs/PWC-Net, thank you all for attention.
+
 # Acknowledgments
 - [NVIDIA/flownet2-pytorch](https://github.com/NVIDIA/flownet2-pytorch): framework, data transformers, loss functions, and many details about flow estimation.
 - [yunjey/pytorch-tutorial](https://github.com/yunjey/pytorch-tutorial/tree/master/tutorials/04-utils/tensorboard): Tensorboard logger
