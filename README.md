@@ -1,5 +1,8 @@
-# News
 Official version(Caffe & PyTorch) is at https://github.com/NVlabs/PWC-Net, thank you all for attention.
+
+# News
+- Fix my usage of Correlation Layer, I've been using 19*19 neighborhood for matching.
+    > NVIDIA is so kind to use their wonderful CUDA to let my mistake seem to be less stupid, btw I don't intend to remove my freaking slow Cost Volume Layer for code diversity or something.
 
 # Acknowledgments
 - [NVIDIA/flownet2-pytorch](https://github.com/NVIDIA/flownet2-pytorch): framework, data transformers, loss functions, and many details about flow estimation.
