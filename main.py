@@ -311,6 +311,7 @@ def train(args):
 
         if step % args.gif_interval == 0:
             ...
+    logger.close_summary()
 
 
 def pred(args):
