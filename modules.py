@@ -11,15 +11,22 @@ from utils import get_grid
 def conv(batch_norm, in_planes, out_planes, kernel_size=3, stride=1, dilation=1):
     if batch_norm:
         return nn.Sequential(
-            nn.Conv2d(in_planes, out_planes, kernel_size=kernel_size, stride=stride, dilation=dilation,
-                      padding=((kernel_size - 1) * dilation) // 2, bias=False),
+            # nn.Conv2d(in_planes, out_planes, kernel_size=kernel_size, stride=stride, dilation=dilation,
+            #           padding=((kernel_size - 1) * dilation) // 2, bias=False),
+            # ----------------------------------------------------------------------------------------------------
+            nn.Conv2d(in_planes, in_planes, kernel_size=kernel_size, stride=stride, dilation=dilation,
+                      padding=((kernel_size - 1) * dilation) // 2, groups=in_planes, bias=False),
+            nn.Conv2d(in_planes, out_planes, kernel_size=1, padding=0, groups=1, bias=False),
             nn.BatchNorm2d(out_planes),
             nn.LeakyReLU(0.1, inplace=True)
         )
     else:
         return nn.Sequential(
-            nn.Conv2d(in_planes, out_planes, kernel_size=kernel_size, stride=stride, dilation=dilation,
-                      padding=((kernel_size - 1) * dilation) // 2, bias=True),
+            # nn.Conv2d(in_planes, out_planes, kernel_size=kernel_size, stride=stride, dilation=dilation,
+            #          padding=((kernel_size - 1) * dilation) // 2, bias=True),
+            nn.Conv2d(in_planes, in_planes, kernel_size=kernel_size, stride=stride, dilation=dilation,
+                      padding=((kernel_size - 1) * dilation) // 2, groups=in_planes, bias=False),
+            nn.Conv2d(in_planes, out_planes, kernel_size=1, padding=0, groups=1, bias=False),
             nn.LeakyReLU(0.1, inplace=True)
         )
 
@@ -75,7 +82,7 @@ class CostVolumeLayer(nn.Module):
                     slice_w, slice_w_r = slice(None), slice(None)
 
                 cv[:, (self.search_range * 2 + 1) * i + j, slice_h, slice_w] = (
-                            x1[:, :, slice_h, slice_w] * x2[:, :, slice_h_r, slice_w_r]).sum(1)
+                        x1[:, :, slice_h, slice_w] * x2[:, :, slice_h_r, slice_w_r]).sum(1)
 
         return cv / shape[1]
 

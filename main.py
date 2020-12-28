@@ -159,7 +159,8 @@ def train(args):
     model = Net(args).to(args.device)
     if args.load is not None:
         model.load_state_dict(torch.load(args.load))
-
+    total = sum([param.nelement() for param in model.parameters()])
+    print("Number of parameter: %.2fM" % (total / 1e6))
     # Prepare Dataloader
     # ============================================================
     train_dataset = eval(args.dataset)(args.dataset_dir, 'train', cropper=args.crop_type, crop_shape=args.crop_shape,
@@ -222,6 +223,7 @@ def train(args):
         # ============================================================
         t_forward = time.time()
         flows, summaries = model(data[0])
+        # print(flows.shape)
         forward_time += time.time() - t_forward
 
         # Compute Loss
@@ -269,7 +271,8 @@ def train(args):
             vis_batch = []
             for b in range(B):
                 batch = [np.array(
-                    F.upsample(flows[l][b].cpu().unsqueeze(0), scale_factor=2 ** ((len(flows) - l + 1))).detach().squeeze(
+                    F.upsample(flows[l][b].cpu().unsqueeze(0),
+                               scale_factor=2 ** ((len(flows) - l + 1))).detach().squeeze(
                         0)).transpose(1, 2, 0) for l in range(len(flows) - 1)]
                 # for i in batch:
                 #     print(i.shape)
@@ -297,8 +300,10 @@ def train(args):
             #     logger.image_summary(f'flow-lv{layer_idx}', flow_vis, step)
 
             logger.image_summary('src & tgt', [np.concatenate([i.squeeze(0), j.squeeze(0)], axis=1) for i, j in
-                                               zip(np.split(np.array(x1_raw.data.cpu()).transpose(0, 2, 3, 1), B, axis=0),
-                                                   np.split(np.array(x2_raw.data.cpu()).transpose(0, 2, 3, 1), B, axis=0))],
+                                               zip(np.split(np.array(x1_raw.data.cpu()).transpose(0, 2, 3, 1), B,
+                                                            axis=0),
+                                                   np.split(np.array(x2_raw.data.cpu()).transpose(0, 2, 3, 1), B,
+                                                            axis=0))],
                                  step)
 
         # save model
@@ -319,9 +324,11 @@ def pred(args):
     # Build Model
     # ============================================================
     print("start pred")
+    time_back = time.time()
     model = Net(args).to(args.device)
     model.load_state_dict(torch.load(args.load))
-
+    cstime = time.time() - time_back
+    print("初始化耗时%fs" % cstime)
     # Load Data
     # ============================================================
     x1_raw, x2_raw = map(imageio.imread, args.input)
@@ -352,7 +359,7 @@ def pred(args):
 
     # pad to multiples of 64
     H, W = x1_raw.shape[:2]
-    print(x1_raw.shape)
+    # print(x1_raw.shape)
     x1_raw = np.pad(x1_raw, ((0, (64 - H % 64) if H % 64 else 0), (0, (64 - W % 64) if H % 64 else 0), (0, 0)),
                     mode='constant')
     x2_raw = np.pad(x2_raw, ((0, (64 - H % 64) if H % 64 else 0), (0, (64 - W % 64) if H % 64 else 0), (0, 0)),
@@ -366,10 +373,15 @@ def pred(args):
 
     # Forward Pass
     # ============================================================
+    # print(x.shape)
     with torch.no_grad():
         flows, summaries = model(x)
     flow = flows[-1].cpu()
+    # print(flow.shape)
     flow = np.array(flow.data).transpose(0, 2, 3, 1).squeeze(0)
+    # print(flow.shape)
+    hstime = time.time() - time_back
+    print("预测耗时%fs" % hstime)
     save_flow(args.output, flow)
     flow_vis = vis_flow(flow)
     imageio.imwrite(args.output.replace('.flo', '.png'), flow_vis)
@@ -395,7 +407,7 @@ def test(args):
 
     # logs
     # ============================================================
-    time_logs = [];
+    time_logs = []
     total_epe = 0
 
     for batch_idx, (data, target) in enumerate(test_loader):
@@ -409,9 +421,16 @@ def test(args):
 
         # Compute EPE
         # ============================================================
-        # epe = EPE(flows, target[0])
-        # total_epe += epe.item()
-        print(f'[{batch_idx}/{total_batches}]  Time: {time_logs[batch_idx]:.2f}s')  # EPE:{total_epe / batch_idx}')
+        flow = flows[-1].cpu()
+        flow = np.array(flow.data).transpose(0, 1, 2, 3).squeeze(0)
+        # print(flow.shape)
+        targetn = torch.squeeze(target[0])
+        # print(targetn.shape)
+        epe = EPE(flow, targetn.cpu())
+
+        total_epe += epe.item()
+        # print(f'total_epe={total_epe} batch_idx={batch_idx}')
+        print(f'[{batch_idx}/{total_batches}]  Time: {time_logs[batch_idx]:.2f}s EPE:{total_epe / (batch_idx + 1)}')
 
 
 if __name__ == '__main__':

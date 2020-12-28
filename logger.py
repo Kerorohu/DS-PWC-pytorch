@@ -5,6 +5,7 @@ from io import BytesIO
 from PIL import Image
 from torch.utils.tensorboard import SummaryWriter
 import torchvision
+import torch
 import torchvision.transforms as transforms
 
 
@@ -22,7 +23,14 @@ class Logger(object):
     def image_summary(self, tag, images, step):
         """Log a list of images."""
 
-        #img_summaries = []
+        for x in images:
+            print(x.shape)
+            #    b = torch.from_numpy(x)
+            #   torchvision.utils.make_grid(b)
+            # self.writer.add_image(tag, x, step, dataformats='HWC')
+        # self.writer.flush()
+
+        # img_summaries = []
         # for i, img in enumerate(images):
         # Write the image to a string
         # try:
@@ -77,6 +85,7 @@ class Logger(object):
         summary = tf.summary(value=[tf.summary.Value(tag=tag, histo=hist)])
         self.writer.add_summary(summary, step)
         '''
+        print(values.shape)
         tf.summary.histogram(name=tag, data=values, step=step)
         self.writer.flush()
 
