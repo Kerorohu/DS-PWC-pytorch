@@ -53,9 +53,20 @@ $$cv^l(x_1,x_2)=\frac{1}{N}(c^l_1(x_1))^Tc^l_w(x_2)$$
 #### 损失函数
 与FlowNet[^2]中相同的多尺度训练损失
 [^2]:A. Dosovitskiy, P. Fischery, E. Ilg, C. Hazirbas, V. Golkov,P. van der Smagt, D. Cremers, T. Brox, et al. FlowNet:Learning optical flow with convolutional networks. In IEEE International Conference on Computer Vision (ICCV), 2015.1, 2, 3, 4, 5
+
+### 训练策略  
+**总体顺序**：FlyingChairs >> FlyingThings3D >> Sintel
+**原因**：在更简单的FlyingThings上可以帮助网络学习色彩匹配的一般概念，而不会让3D运动和照明产生先验混淆  
+
+**详细顺序**：
+1. 在FlyingChairs上按照Slong对学习率进行调整，节点在迭代次数为0.4M, 0.6M, 0.8M, and 1M时调整。batch-size为8、图像大小为488 * 348
+2. 在FlyingThings3D上继续微调，按照Sfine的调整路线调整学习率。batch-size为4、图像大小为768 * 348
+3. 在MPI Sintel上继续微调，数据增强中添加水平翻转，并消除附加噪声，batch-size为4，图图像大小为768 * 348
+![学习率曲线](lrqx.png)
 ### 数据库
 [KITTI2015](http://www.cvlibs.net/datasets/kitti/eval_scene_flow.php?benchmark=flow)  
 [Sintel](http://sintel.is.tue.mpg.de/downloads)
+
 
 ## PWC-Net Pytorch实现
 包含训练实现 https://github.com/RanhaoKang/PWC-Net_pytorch  
@@ -63,11 +74,11 @@ $$cv^l(x_1,x_2)=\frac{1}{N}(c^l_1(x_1))^Tc^l_w(x_2)$$
 win10下运行demo 命令：
 预测：
 ```
-python main.py --input-norm --batch-norm --residual pred --load example/SintelFinal-200K-noBN_SintelFinal-148K-BN.pkl -i example/1.png example/2.png
+python main.py --input-norm --batch-norm --residual --corr_activation pred --load example/SintelFinal-200K-noBN_SintelFinal-148K-BN.pkl -i example/1.png example/2.png
 ```
 训练：
 ```
-python main.py --input-norm --batch-norm --residual --num_workers 4 train --dataset FlyingChairs --dataset_dir D:\DataSet\FlyingChairs_release\data --batch_size 4 //--load D:\Project\GithubProject\PWC-Net_pytorch\train_log\20201222-141830\500.pkl
+python main.py --input-norm --batch-norm --residual --corr_activation --num_workers 4 train --dataset FlyingChairs --dataset_dir D:\DataSet\FlyingChairs_release\data --batch_size 4 //--load D:\Project\GithubProject\PWC-Net_pytorch\train_log\20201222-141830\500.pkl
 ```
 
 ### 代码参数设置
@@ -98,9 +109,10 @@ python main.py --input-norm --batch-norm --residual --num_workers 4 train --data
 
 ### 模型参数
 **PWC-Net**：8.63M
-**改进模型**：1.06M
+**改进模型**：1.06M/1.96M
 
 ## 备注
 ### anaconda配置
 **创建配置文件**：`conda env export > pwc.yaml`
 **使用配置文件导入**:`conda env create -f pwc.yaml`
+考虑IEICE

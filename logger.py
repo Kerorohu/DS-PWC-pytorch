@@ -23,8 +23,8 @@ class Logger(object):
     def image_summary(self, tag, images, step):
         """Log a list of images."""
 
-        for x in images:
-            print(x.shape)
+        # for x in images:
+        #     print(x.shape)
             #    b = torch.from_numpy(x)
             #   torchvision.utils.make_grid(b)
             # self.writer.add_image(tag, x, step, dataformats='HWC')

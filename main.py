@@ -10,9 +10,10 @@ import torch.nn.functional as F
 from torch.autograd import Variable
 from torch.utils.data import DataLoader
 import time
+from torchvision import transforms
 
 from model import Net
-from losses import L1loss, L2loss, training_loss, robust_training_loss, MultiScale, EPE
+from losses import L1loss, L2loss, training_loss, robust_training_loss, MultiScale, EPE, EPEp
 from dataset import (FlyingChairs, FlyingThings, Sintel, SintelFinal, SintelClean, KITTI)
 
 import tensorflow as tf
@@ -59,6 +60,7 @@ def main():
     parser.add_argument('--output_level', type=int, default=4)
 
     # correlation args
+    # CostVolumeLayer or cost_volume
     parser.add_argument('--corr', type=str, default='cost_volume')
     parser.add_argument('--search_range', type=int, default=4)
     parser.add_argument('--corr_activation', action='store_true')
@@ -161,10 +163,12 @@ def train(args):
         model.load_state_dict(torch.load(args.load))
     total = sum([param.nelement() for param in model.parameters()])
     print("Number of parameter: %.2fM" % (total / 1e6))
+    # Prepare DateTransforms
     # Prepare Dataloader
     # ============================================================
     train_dataset = eval(args.dataset)(args.dataset_dir, 'train', cropper=args.crop_type, crop_shape=args.crop_shape,
-                                       resize_shape=args.resize_shape, resize_scale=args.resize_scale)
+                                       resize_shape=args.resize_shape, resize_scale=args.resize_scale,
+                                       transforms=None)
     eval_dataset = eval(args.dataset)(args.dataset_dir, 'test', cropper=args.crop_type, crop_shape=args.crop_shape,
                                       resize_shape=args.resize_shape, resize_scale=args.resize_scale)
     # print(len(train_dataset))
@@ -379,6 +383,7 @@ def pred(args):
     flow = flows[-1].cpu()
     # print(flow.shape)
     flow = np.array(flow.data).transpose(0, 2, 3, 1).squeeze(0)
+    # flow = flow[[[1, 0]]]
     # print(flow.shape)
     hstime = time.time() - time_back
     print("预测耗时%fs" % hstime)
@@ -421,12 +426,14 @@ def test(args):
 
         # Compute EPE
         # ============================================================
+        print(flows.shape)
         flow = flows[-1].cpu()
-        flow = np.array(flow.data).transpose(0, 1, 2, 3).squeeze(0)
-        # print(flow.shape)
-        targetn = torch.squeeze(target[0])
-        # print(targetn.shape)
-        epe = EPE(flow, targetn.cpu())
+        flow = np.array(flow.data).transpose(0, 2, 3, 1).squeeze(0)
+        print(flow.shape)
+        targetn = target[0].cpu()
+        targetn = np.array(targetn).transpose(0, 2, 3, 1).squeeze(0)
+        print(targetn.shape)
+        epe = EPEp(flow, targetn, args)
 
         total_epe += epe.item()
         # print(f'total_epe={total_epe} batch_idx={batch_idx}')

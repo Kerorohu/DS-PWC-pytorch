@@ -22,6 +22,12 @@ def EPE(input_flow, target_flow):
     return torch.norm(target_flow - input_flow, p=2, dim=1).mean()
 
 
+def EPEp(input_flow, target_flow, args):
+    input_flow = torch.Tensor(input_flow).to(args.device)
+    target_flow = torch.Tensor(target_flow).to(args.device)
+    return torch.norm(target_flow - input_flow, p=2, dim=1).mean()
+
+
 class L1(nn.Module):
     def __init__(self):
         super(L1, self).__init__()
@@ -98,7 +104,7 @@ class MultiScale(nn.Module):
         for w, o, t in zip(args.weights, outputs, targets):
             # print(f'flow值域: ({o.min()}, {o.max()})')
             # print(f'gt值域: ({t.min()}, {t.max()})')
-            # print(f'EPE:', EPE(o, t))
+            # print(f'EPE:', EPE(o, t).item())
             loss += w * self.loss(o, t)
             epe += EPE(o, t)
             loss_levels.append(self.loss(o, t))

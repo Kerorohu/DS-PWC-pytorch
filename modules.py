@@ -31,6 +31,22 @@ def conv(batch_norm, in_planes, out_planes, kernel_size=3, stride=1, dilation=1)
         )
 
 
+def nmconv(batch_norm, in_planes, out_planes, kernel_size=3, stride=1, dilation=1):
+    if batch_norm:
+        return nn.Sequential(
+            nn.Conv2d(in_planes, out_planes, kernel_size=kernel_size, stride=stride, dilation=dilation,
+                      padding=((kernel_size - 1) * dilation) // 2, bias=False),
+            nn.BatchNorm2d(out_planes),
+            nn.LeakyReLU(0.1, inplace=True)
+        )
+    else:
+        return nn.Sequential(
+            nn.Conv2d(in_planes, out_planes, kernel_size=kernel_size, stride=stride, dilation=dilation,
+                      padding=((kernel_size - 1) * dilation) // 2, bias=True),
+            nn.LeakyReLU(0.1, inplace=True)
+        )
+
+
 class WarpingLayer(nn.Module):
 
     def __init__(self, args):
@@ -96,8 +112,8 @@ class FeaturePyramidExtractor(nn.Module):
         self.convs = []
         for l, (ch_in, ch_out) in enumerate(zip(args.lv_chs[:-1], args.lv_chs[1:])):
             layer = nn.Sequential(
-                conv(args.batch_norm, ch_in, ch_out, stride=2),
-                conv(args.batch_norm, ch_out, ch_out)
+                nmconv(args.batch_norm, ch_in, ch_out, stride=2),
+                nmconv(args.batch_norm, ch_out, ch_out)
             )
             self.add_module(f'Feature(Lv{l})', layer)
             self.convs.append(layer)

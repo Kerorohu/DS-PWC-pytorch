@@ -1,3 +1,4 @@
+from PIL import Image
 from torch.utils.data import Dataset
 from pathlib import Path
 from itertools import islice
@@ -77,6 +78,9 @@ class BaseDataset(Dataset, metaclass=ABCMeta):
             images = list(map(resizer, images))
             flow = resizer(flow)
 
+        if self.transforms is not None:
+            ...
+
         if self.train_or_test == 'test':
             H, W = img1.shape[:2]
             img1, img2 = images
@@ -125,7 +129,7 @@ class BaseDataset(Dataset, metaclass=ABCMeta):
 # ============================================================
 class FlyingChairs(BaseDataset):
     def __init__(self, dataset_dir, train_or_test='train', color='rgb', cropper='random', crop_shape=None,
-                 resize_shape=None, resize_scale=None):
+                 resize_shape=None, resize_scale=None, transforms=None):
         super(FlyingChairs, self).__init__()
         assert train_or_test in ['train', 'test']
         self.color = color
@@ -133,7 +137,7 @@ class FlyingChairs(BaseDataset):
         self.crop_shape = crop_shape
         self.resize_shape = resize_shape
         self.resize_scale = resize_scale
-
+        self.transforms = transforms
         self.dataset_dir = dataset_dir
         self.train_or_test = train_or_test
 
