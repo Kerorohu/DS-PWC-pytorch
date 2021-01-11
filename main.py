@@ -14,7 +14,7 @@ from torchvision import transforms
 
 from model import Net
 from losses import L1loss, L2loss, training_loss, robust_training_loss, MultiScale, EPE, EPEp
-from dataset import (FlyingChairs, FlyingThings, Sintel, SintelFinal, SintelClean, KITTI)
+from dataset import (FlyingChairs, FlyingThings, Sintel, SintelFinal, SintelClean, KITTI, mixup)
 
 import tensorflow as tf
 from summary import summary as summary_
@@ -86,6 +86,7 @@ def main():
     train_parser.add_argument('--dataset', type=str,
                               choices=['FlyingChairs', 'FlyingThings', 'SintelFinal', 'SintelClean', 'KITTI'],
                               required=True)
+    train_parser.add_argument('--mixup', action='store_true')
 
     # loss
     train_parser.add_argument('--weights', nargs='+', type=float, default=[0.32, 0.08, 0.02, 0.01, 0.005])
@@ -211,13 +212,16 @@ def train(args):
 
         # Load Data
         # ============================================================
-        data, target = next(data_iter)
-
+        # data, target = next(data_iter)
+        if args.mixup:
+            data, target = mixup(data_iter)
+        else:
+            data, target = next(data_iter)
         # shape: B,3,H,W
         squeezer = partial(torch.squeeze, dim=2)
         # shape: B,2,H,W
         data, target = [d.to(args.device) for d in data], [t.to(args.device) for t in target]
-
+        # print(f'datalist={len(data[0])}')
         x1_raw = data[0][:, :, 0, :, :]
         x2_raw = data[0][:, :, 1, :, :]
         if data[0].size(0) != args.batch_size: continue
