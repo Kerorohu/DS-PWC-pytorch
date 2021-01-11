@@ -46,7 +46,7 @@ def window(seq, n=2):
 
 def mixup(data_iter, alpha=0.2, probability=0.5):
     x, y = next(data_iter)
-    if(random.random() <= probability):
+    if random.random() <= probability:
         l = np.random.beta(alpha, alpha)
         index = torch.randperm(x[0].size(0))
         # print(x[0].shape)

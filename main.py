@@ -87,6 +87,8 @@ def main():
                               choices=['FlyingChairs', 'FlyingThings', 'SintelFinal', 'SintelClean', 'KITTI'],
                               required=True)
     train_parser.add_argument('--mixup', action='store_true')
+    train_parser.add_argument('--mixup_alpha', default=0.2, type=float, help='beta parm')
+    train_parser.add_argument('--mixup_prb', default=0.5, type=float, help='mixup probability')
 
     # loss
     train_parser.add_argument('--weights', nargs='+', type=float, default=[0.32, 0.08, 0.02, 0.01, 0.005])
@@ -170,19 +172,19 @@ def train(args):
     train_dataset = eval(args.dataset)(args.dataset_dir, 'train', cropper=args.crop_type, crop_shape=args.crop_shape,
                                        resize_shape=args.resize_shape, resize_scale=args.resize_scale,
                                        transforms=None)
-    eval_dataset = eval(args.dataset)(args.dataset_dir, 'test', cropper=args.crop_type, crop_shape=args.crop_shape,
-                                      resize_shape=args.resize_shape, resize_scale=args.resize_scale)
+    # eval_dataset = eval(args.dataset)(args.dataset_dir, 'test', cropper=args.crop_type, crop_shape=args.crop_shape,
+    #                                   resize_shape=args.resize_shape, resize_scale=args.resize_scale)
     # print(len(train_dataset))
     train_loader = DataLoader(train_dataset,
                               batch_size=args.batch_size,
                               shuffle=True,
                               num_workers=args.num_workers,
                               pin_memory=True)
-    eval_loader = DataLoader(eval_dataset,
-                             batch_size=args.batch_size,
-                             shuffle=True,
-                             num_workers=args.num_workers,
-                             pin_memory=True)
+    # eval_loader = DataLoader(eval_dataset,
+    #                          batch_size=args.batch_size,
+    #                          shuffle=True,
+    #                          num_workers=args.num_workers,
+    #                          pin_memory=True)
 
     # Init logger
     logger = Logger(args.log_dir)
@@ -214,7 +216,7 @@ def train(args):
         # ============================================================
         # data, target = next(data_iter)
         if args.mixup:
-            data, target = mixup(data_iter)
+            data, target = mixup(data_iter, args.mixup_alpha, args.mixup_prb)
         else:
             data, target = next(data_iter)
         # shape: B,3,H,W
