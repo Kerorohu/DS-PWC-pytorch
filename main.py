@@ -280,10 +280,14 @@ def train(args):
             B = flows[0].size(0)
             vis_batch = []
             for b in range(B):
+                # batch = [np.array(
+                #     F.upsample(flows[l][b].cpu().unsqueeze(0),
+                #                scale_factor=2 ** ((len(flows) - l + 1))).detach().squeeze(
+                #         0)).transpose(1, 2, 0) for l in range(len(flows) - 1)]
                 batch = [np.array(
-                    F.upsample(flows[l][b].cpu().unsqueeze(0),
-                               scale_factor=2 ** ((len(flows) - l + 1))).detach().squeeze(
-                        0)).transpose(1, 2, 0) for l in range(len(flows) - 1)]
+                    F.interpolate(flows[l][b].unsqueeze(0),
+                                  scale_factor=2 ** (len(flows) - l + 1)).detach().squeeze(
+                         0).cpu()).transpose(1, 2, 0) for l in range(len(flows) - 1)]
                 # for i in batch:
                 #     print(i.shape)
                 # print(flows[-1][b].detach().cpu().numpy().transpose(1,2,0))

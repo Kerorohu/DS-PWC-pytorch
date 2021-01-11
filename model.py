@@ -75,7 +75,8 @@ class Net(nn.Module):
                 shape[1] = 2
                 flow = torch.zeros(shape).to(args.device)
             else:
-                flow = F.upsample(flow, scale_factor=2, mode='bilinear') * 2
+                # flow = F.upsample(flow, scale_factor=2, mode='bilinear') * 2
+                flow = F.interpolate(flow, scale_factor=2, mode='bilinear') * 2
 
             x2_warp = self.warping_layer(x2, flow)
 
@@ -94,8 +95,10 @@ class Net(nn.Module):
             flow = flow_coarse + flow_fine
 
             if l == args.output_level:
-                flow = F.upsample(flow, scale_factor=2 ** (args.num_levels - args.output_level - 1),
-                                  mode='bilinear') * 2 ** (args.num_levels - args.output_level - 1)
+                # flow = F.upsample(flow, scale_factor=2 ** (args.num_levels - args.output_level - 1),
+                #                   mode='bilinear') * 2 ** (args.num_levels - args.output_level - 1)
+                flow = F.interpolate(flow, scale_factor=2 ** (args.num_levels - args.output_level - 1),
+                                     mode='bilinear') * 2 ** (args.num_levels - args.output_level - 1)
                 flows.append(flow)
                 summaries['x2_warps'].append(x2_warp.data)
                 break
