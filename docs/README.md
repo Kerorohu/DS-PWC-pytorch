@@ -78,7 +78,7 @@ python main.py --input-norm --batch-norm --residual --corr_activation pred --loa
 ```
 训练：
 ```
-python main.py --input-norm --batch-norm --residual --corr_activation --num_workers 4 train --dataset FlyingChairs --dataset_dir D:\DataSet\FlyingChairs_release\data --batch_size 4 //--load D:\Project\GithubProject\PWC-Net_pytorch\train_log\20201222-141830\500.pkl
+python main.py --input-norm --batch-norm --residual --corr_activation --num_workers 4 train --dataset FlyingChairs --dataset_dir D:\DataSet\FlyingChairs_release\data --batch_size 4 --mixup //--load D:\Project\GithubProject\PWC-Net_pytorch\train_log\20201222-141830\500.pkl
 ```
 
 ### 代码参数设置

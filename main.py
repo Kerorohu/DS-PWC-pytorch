@@ -314,9 +314,9 @@ def train(args):
             #     logger.image_summary(f'flow-lv{layer_idx}', flow_vis, step)
 
             logger.image_summary('src & tgt', [np.concatenate([i.squeeze(0), j.squeeze(0)], axis=1) for i, j in
-                                               zip(np.split(np.array(x1_raw.data.cpu()).transpose(0, 2, 3, 1), B,
+                                               zip(np.split(np.array(x1_raw.data.cpu()), B,
                                                             axis=0),
-                                                   np.split(np.array(x2_raw.data.cpu()).transpose(0, 2, 3, 1), B,
+                                                   np.split(np.array(x2_raw.data.cpu()), B,
                                                             axis=0))],
                                  step)
 
