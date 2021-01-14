@@ -1,18 +1,16 @@
-import random
-from abc import abstractmethod, ABCMeta
-from functools import partial
-from itertools import islice
-from pathlib import Path
-
-import cv2
-import imageio
-import numpy as np
-import torch
+from PIL import Image
 from torch.utils.data import Dataset
-from torchvision import transforms
-
+from pathlib import Path
+from itertools import islice
+import numpy as np
+import imageio
+import torch
+import random
+import cv2
+from functools import partial
 from flow_utils import load_flow
-
+from abc import abstractmethod, ABCMeta
+from torchvision import transforms
 
 class StaticRandomCrop(object):
     def __init__(self, image_size, crop_size):

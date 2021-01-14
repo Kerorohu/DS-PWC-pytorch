@@ -1,23 +1,26 @@
-import argparse
-import time
 from datetime import datetime
-from functools import partial
-from pathlib import Path
-import cv2
+import argparse
 import imageio
+import cv2
 import numpy as np
 import torch
-import torch.nn.functional as F
-from torch.utils.data import DataLoader
+from functools import partial
 import torch.nn as nn
+import torch.nn.functional as F
 from torch.autograd import Variable
-from dataset import (mixup, enhance, FlyingThings, Sintel, SintelFinal, SintelClean, KITTI)
-from losses import L1loss, L2loss, training_loss, robust_training_loss, MultiScale, EPE
-from flow_utils import (vis_flow, save_flow)
-from logger import Logger
-from losses import EPEp
+from torch.utils.data import DataLoader
+import time
+from torchvision import transforms
+
 from model import Net
+from losses import L1loss, L2loss, training_loss, robust_training_loss, MultiScale, EPE, EPEp
+from dataset import (FlyingChairs, FlyingThings, Sintel, SintelFinal, SintelClean, KITTI, mixup)
+
+import tensorflow as tf
 from summary import summary as summary_
+from logger import Logger
+from pathlib import Path
+from flow_utils import (vis_flow, save_flow)
 
 
 def main():
@@ -288,7 +291,7 @@ def train(args):
                 batch = [np.array(
                     F.interpolate(flows[l][b].unsqueeze(0),
                                   scale_factor=2 ** (len(flows) - l + 1)).detach().squeeze(
-                        0).cpu()).transpose(1, 2, 0) for l in range(len(flows) - 1)]
+                         0).cpu()).transpose(1, 2, 0) for l in range(len(flows) - 1)]
                 # for i in batch:
                 #     print(i.shape)
                 # print(flows[-1][b].detach().cpu().numpy().transpose(1,2,0))
