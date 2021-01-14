@@ -1,15 +1,17 @@
-from PIL import Image
-from torch.utils.data import Dataset
-from pathlib import Path
-from itertools import islice
-import numpy as np
-import imageio
-import torch
 import random
-import cv2
-from functools import partial
-from flow_utils import load_flow
 from abc import abstractmethod, ABCMeta
+from functools import partial
+from itertools import islice
+from pathlib import Path
+
+import cv2
+import imageio
+import numpy as np
+import torch
+from torch.utils.data import Dataset
+from torchvision import transforms
+
+from flow_utils import load_flow
 
 
 class StaticRandomCrop(object):
@@ -60,6 +62,41 @@ def mixup(data_iter, alpha=0.2, probability=0.5):
     return x, y
 
 
+def enhance(images, prb=0.7):
+    topli = transforms.ToPILImage()
+    totensor = transforms.ToTensor()
+    a = images[0]
+    b = images[1]
+    # print(f'zengqiangqian{a.shape}')
+    randombright = np.random.normal(loc=1, scale=0.04 ** 0.5)
+    randomcontrast = np.random.uniform(0.2, 1.4)
+    randomgamma = np.random.uniform(0.7, 1.5)
+    randomhue = np.random.uniform(-0.1, 0.1)
+
+    a = topli(a)
+    b = topli(b)
+    a = transforms.functional.adjust_brightness(a, randombright)
+    b = transforms.functional.adjust_brightness(b, randombright)
+    a = transforms.functional.adjust_contrast(a, randomcontrast)
+    b = transforms.functional.adjust_contrast(b, randomcontrast)
+    a = transforms.functional.adjust_gamma(a, randomgamma)
+    b = transforms.functional.adjust_gamma(b, randomgamma)
+    a = transforms.functional.adjust_hue(a, randomhue)
+    b = transforms.functional.adjust_hue(b, randomhue)
+    a = totensor(a)
+    b = totensor(b)
+    row = a.size()[0]
+    col = a.size()[1]
+    i = np.random.randint(row)
+    j = np.random.randint(col)
+
+    # print(f'zengqianghou{a.shape}')
+    images = []
+    images.append(a)
+    images.append(b)
+    return images
+
+
 class BaseDataset(Dataset, metaclass=ABCMeta):
     @abstractmethod
     def __init__(self):
@@ -70,16 +107,16 @@ class BaseDataset(Dataset, metaclass=ABCMeta):
 
     def __getitem__(self, idx):
         img1_path, img2_path, flow_path = self.samples[idx]
-        # img1, img2 = map(imageio.imread, (img1_path, img2_path))
-        img1, img2 = map(cv2.imread, (img1_path, img2_path))
+        img1, img2 = map(imageio.imread, (img1_path, img2_path))
+        # img1, img2 = map(cv2.imread, (img1_path, img2_path))
         flow = load_flow(flow_path)
 
         if self.color == 'gray':
             img1 = cv2.cvtColor(img1, cv2.COLOR_BGR2GRAY)[:, :, np.newaxis]
             img2 = cv2.cvtColor(img2, cv2.COLOR_BGR2GRAY)[:, :, np.newaxis]
-        else:
-            img1 = cv2.cvtColor(img1, cv2.COLOR_BGR2RGB)
-            img2 = cv2.cvtColor(img1, cv2.COLOR_BGR2RGB)
+        # else:
+        #     img1 = cv2.cvtColor(img1, cv2.COLOR_BGR2RGB)
+        #     img2 = cv2.cvtColor(img1, cv2.COLOR_BGR2RGB)
 
         images = [img1, img2]
         if self.crop_shape is not None:
@@ -98,10 +135,17 @@ class BaseDataset(Dataset, metaclass=ABCMeta):
             images = list(map(resizer, images))
             flow = resizer(flow)
 
-        # seed = np.random.randint(2147483647)  # make a seed with numpy generator
-        # random.seed(seed)
+        # make a seed with numpy generator
+        seed = np.random.randint(2147483647)
+        random.seed(seed)
         if self.transforms is not None:
-            ...
+            # print(f'zhiqian{images[0].shape}')
+            images = enhance(images)
+            res = []
+            for a in images:
+                # print(f'zhihou{a.shape}')
+                res.append(a.numpy().transpose(1, 2, 0))
+            images = res
 
         if self.train_or_test == 'test':
             H, W = img1.shape[:2]

@@ -1,26 +1,21 @@
-from datetime import datetime
 import argparse
+import time
+from datetime import datetime
+from functools import partial
+from pathlib import Path
+
 import imageio
-import cv2
 import numpy as np
 import torch
-from functools import partial
-import torch.nn as nn
 import torch.nn.functional as F
-from torch.autograd import Variable
 from torch.utils.data import DataLoader
-import time
-from torchvision import transforms
 
-from model import Net
-from losses import L1loss, L2loss, training_loss, robust_training_loss, MultiScale, EPE, EPEp
-from dataset import (FlyingChairs, FlyingThings, Sintel, SintelFinal, SintelClean, KITTI, mixup)
-
-import tensorflow as tf
-from summary import summary as summary_
-from logger import Logger
-from pathlib import Path
+from dataset import (mixup)
 from flow_utils import (vis_flow, save_flow)
+from logger import Logger
+from losses import EPEp
+from model import Net
+from summary import summary as summary_
 
 
 def main():
@@ -89,6 +84,8 @@ def main():
     train_parser.add_argument('--mixup', action='store_true')
     train_parser.add_argument('--mixup_alpha', default=0.2, type=float, help='beta parm')
     train_parser.add_argument('--mixup_prb', default=0.5, type=float, help='mixup probability')
+    train_parser.add_argument('--no_transforms', action='store_false')
+    train_parser.add_argument('--erasing', type=float, default=0.7)
 
     # loss
     train_parser.add_argument('--weights', nargs='+', type=float, default=[0.32, 0.08, 0.02, 0.01, 0.005])
@@ -167,11 +164,12 @@ def train(args):
     total = sum([param.nelement() for param in model.parameters()])
     print("Number of parameter: %.2fM" % (total / 1e6))
     # Prepare DateTransforms
+
     # Prepare Dataloader
     # ============================================================
     train_dataset = eval(args.dataset)(args.dataset_dir, 'train', cropper=args.crop_type, crop_shape=args.crop_shape,
                                        resize_shape=args.resize_shape, resize_scale=args.resize_scale,
-                                       transforms=None)
+                                       transforms=args.no_transforms)
     # eval_dataset = eval(args.dataset)(args.dataset_dir, 'test', cropper=args.crop_type, crop_shape=args.crop_shape,
     #                                   resize_shape=args.resize_shape, resize_scale=args.resize_scale)
     # print(len(train_dataset))
@@ -219,6 +217,7 @@ def train(args):
             data, target = mixup(data_iter, args.mixup_alpha, args.mixup_prb)
         else:
             data, target = next(data_iter)
+
         # shape: B,3,H,W
         squeezer = partial(torch.squeeze, dim=2)
         # shape: B,2,H,W
@@ -287,7 +286,7 @@ def train(args):
                 batch = [np.array(
                     F.interpolate(flows[l][b].unsqueeze(0),
                                   scale_factor=2 ** (len(flows) - l + 1)).detach().squeeze(
-                         0).cpu()).transpose(1, 2, 0) for l in range(len(flows) - 1)]
+                        0).cpu()).transpose(1, 2, 0) for l in range(len(flows) - 1)]
                 # for i in batch:
                 #     print(i.shape)
                 # print(flows[-1][b].detach().cpu().numpy().transpose(1,2,0))

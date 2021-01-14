@@ -1,8 +1,9 @@
 Official version(Caffe & PyTorch) is at https://github.com/NVlabs/PWC-Net, thank you all for attention.
 
 # News
-- Fix my usage of Correlation Layer, I've been using 19*19 neighborhood for matching.
-    > NVIDIA is so kind to use their wonderful CUDA to let my mistake seem to be less stupid, btw I don't intend to remove my freaking slow Cost Volume Layer for code diversity or something.
+- Added data enhancement methods, such as color changes on the same image pair and mix up.
+
+- The log syntax and PyTorch syntax have been updated to the latest version
 
 # Acknowledgments
 - [NVIDIA/flownet2-pytorch](https://github.com/NVIDIA/flownet2-pytorch): framework, data transformers, loss functions, and many details about flow estimation.
@@ -22,8 +23,8 @@ It starts to output reasonable flows. However, both time and performance need to
 # Usage
 - **Requirements**
     - Python 3.6+
-    - **PyTorch 0.4.0**
-    - Tensorflow
+    - **PyTorch 1.6.0**
+    - ~~Tensorflow~~
 
 
 - **Get Started with Demo**    
@@ -77,12 +78,42 @@ It starts to output reasonable flows. However, both time and performance need to
     python3 main.py train --dataset <DATASET_NAME> --dataset_dir <DIR_NAME>
     ```
 
+### 代码参数设置
+|参数名称|参数类型|参数意义|默认值|
+|-|-|-|:-:|
+|device|string|是否使用gpu|cuda|
+|num_workers|int|工作进程|8|
+|input-norm|store_true|输入归一化|false|
+|rgb_max|float|色彩最大值|255|
+|batch-norm|store_true|网络层归一化|false|
+|lv_chs|int|没懂|3, 16, 32, 64, 96, 128, 192|
+|output_level|int|没懂|4|
+|corr|string|计算相关层得方法|cost_volume|
+|search_range|int|相关层范围d|4|
+|corr_activation|store_true|激活函数？|false|
+|residual|store_true|残差|false|
+|input_shape|int|输入图片得形状|(3, 2, 384, 448)|
+|**训练参数**|---------|---------|----------|
+|corp_type|string|没懂|random|
+|load|string|读取预训练模型|无|
+|dataset|string|数据集类型|无|
+|dataset_dir|string|数据集地址|无|
+|lr|科学计数法|学习率设置|1e-4|
+|total_step|int|总迭代次数|200 * 1000|
+|**数据增强**|--------|---------|-----------|
+|mixup|store_true|数据增强-图片叠加|false|
+|mixup_alpya|float|叠加比例随机系数|0.2|
+|mixup_prb|float|数据增强启用概率|0.5|
+|no_transforms|store_false|色彩类数据增强|True|
+|**预测参数**|---------|---------|----------|
+|i / input|string|两张图片的地址|无|
+|o / output|string|输出.flo的地址|无|
 
 # Details
 If there is any difference between your implementation and mine, please create an issue or something.
 - Network Parameters
     ```
-    Parameters: 8623340 Size: 32.89543151855469 MB
+    Parameters: 1.96M Size: 7.79 MB
     ```
 - Training Logs
     ```

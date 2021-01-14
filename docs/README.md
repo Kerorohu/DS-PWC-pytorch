@@ -6,8 +6,8 @@
 ### 概述
 PWC-Net相对于FlowNet2的模型大小小17倍  
 
-  1. 优势
-  2. 劣势  
+  1. 优势：与最新的光流神经网络相比速度也是非常快的而且有不错的准确率
+  2. 劣势 :新的
 
 ### 卷积神经网络架构  
 ![PWC-Net网络架构](pwc-net架构.png)
@@ -103,6 +103,11 @@ python main.py --input-norm --batch-norm --residual --corr_activation --num_work
 |dataset_dir|string|数据集地址|无|
 |lr|科学计数法|学习率设置|1e-4|
 |total_step|int|总迭代次数|200 * 1000|
+|**数据增强**|--------|---------|-----------|
+|mixup|store_true|数据增强-图片叠加|false|
+|mixup_alpya|float|叠加比例随机系数|0.2|
+|mixup_prb|float|数据增强启用概率|0.5|
+|no_transforms|store_false|色彩类数据增强|True|
 |**预测参数**|---------|---------|----------|
 |i / input|string|两张图片的地址|无|
 |o / output|string|输出.flo的地址|无|
@@ -116,3 +121,4 @@ python main.py --input-norm --batch-norm --residual --corr_activation --num_work
 **创建配置文件**：`conda env export > pwc.yaml`
 **使用配置文件导入**:`conda env create -f pwc.yaml`
 考虑IEICE
+The estimated flow needs to be scaled by 20.0 because, in training, the GT flow is scaled down by 20.0
