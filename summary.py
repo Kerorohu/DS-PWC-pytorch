@@ -4,17 +4,19 @@ from torch.autograd import Variable
 
 from collections import OrderedDict
 
+
 def summary(model, input_size):
     def register_hook(module):
         def hook(module, input, output):
             class_name = str(module.__class__).split('.')[-1].split("'")[0]
             module_idx = len(summary)
 
-            m_key = '%s-%i' % (class_name, module_idx+1)
+            m_key = '%s-%i' % (class_name, module_idx + 1)
             summary[m_key] = OrderedDict()
             summary[m_key]['input_shape'] = list(input[0].size())
             summary[m_key]['input_shape'][0] = -1
-            summary[m_key]['output_shape'] = list(output.size()) if isinstance(output, Variable) else list(output[0].size())
+            summary[m_key]['output_shape'] = list(output.size()) if isinstance(output, Variable) else list(
+                output[0].size())
             summary[m_key]['output_shape'][0] = -1
 
             params = 0
@@ -24,27 +26,26 @@ def summary(model, input_size):
                     summary[m_key]['trainable'] = True
                 else:
                     summary[m_key]['trainable'] = False
-            if hasattr(module, 'bias'):
-                params +=  th.prod(th.LongTensor(list(module.bias.size())))
+            # if hasattr(module, 'bias'):
+            #     params += th.prod(th.LongTensor(list(module.bias.size())))
             summary[m_key]['nb_params'] = params
-            
+
         if not isinstance(module, nn.Sequential) and \
-            not isinstance(module, nn.ModuleList) and \
-            not (module == model):
+                not isinstance(module, nn.ModuleList) and \
+                not (module == model):
             hooks.append(module.register_forward_hook(hook))
-            
+
     if th.cuda.is_available():
         dtype = th.cuda.FloatTensor
     else:
         dtype = th.FloatTensor
-    
+
     # check if there are multiple inputs to the network
     if isinstance(input_size[0], (list, tuple)):
-        x = [Variable(th.rand(1,*in_size)).type(dtype) for in_size in input_size]
+        x = [Variable(th.rand(1, *in_size)).type(dtype) for in_size in input_size]
     else:
-        x = Variable(th.rand(1,*input_size)).type(dtype)
-    
-    
+        x = Variable(th.rand(1, *input_size)).type(dtype)
+
     # print(x.shape)
     # print(type(x[0]))
     # create properties
@@ -66,7 +67,8 @@ def summary(model, input_size):
     trainable_params = 0
     for layer in summary:
         ## input_shape, output_shape, trainable, nb_params
-        line_new = '{:>20}  {:>25} {:>15}'.format(layer, str(summary[layer]['output_shape']), summary[layer]['nb_params'])
+        line_new = '{:>20}  {:>25} {:>15}'.format(layer, str(summary[layer]['output_shape']),
+                                                  summary[layer]['nb_params'])
         total_params += summary[layer]['nb_params']
         if 'trainable' in summary[layer]:
             if summary[layer]['trainable'] == True:

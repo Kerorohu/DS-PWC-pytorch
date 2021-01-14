@@ -85,15 +85,24 @@ def enhance(images, prb=0.7):
     b = transforms.functional.adjust_hue(b, randomhue)
     a = totensor(a)
     b = totensor(b)
+
+    lwr = np.random.uniform(0.33, 3.33)
+    escale = np.random.uniform(0.02, 0.33)
+
     row = a.size()[0]
     col = a.size()[1]
-    i = np.random.randint(row)
-    j = np.random.randint(col)
-
+    pix = (row * col) * escale
+    w = (pix / lwr) ** 0.5
+    w = int(w)
+    h = w * lwr
+    h = int(h)
+    i = np.random.randint(row - h)
+    j = np.random.randint(col - w)
+    a = transforms.functional.erase(a, i, j, h, w, 0)
+    b = transforms.functional.erase(a, i, j, h, w, 0)
     # print(f'zengqianghou{a.shape}')
-    images = []
-    images.append(a)
-    images.append(b)
+
+    images = [a, b]
     return images
 
 
