@@ -85,20 +85,28 @@ def enhance(images, prb=0.7):
     b = totensor(b)
 
     lwr = np.random.uniform(0.33, 3.33)
-    escale = np.random.uniform(0.02, 0.33)
+    escale = np.random.uniform(0.02, 0.15)
 
-    row = a.size()[0]
-    col = a.size()[1]
-    pix = (row * col) * escale
-    w = (pix / lwr) ** 0.5
-    w = int(w)
-    h = w * lwr
-    h = int(h)
-    i = np.random.randint(row - h)
-    j = np.random.randint(col - w)
-    a = transforms.functional.erase(a, i, j, h, w, 0)
-    b = transforms.functional.erase(a, i, j, h, w, 0)
-    # print(f'zengqianghou{a.shape}')
+    if np.random.rand() < prb:
+        row = a.size()[1]
+        col = a.size()[2]
+        pix = (row * col) * escale
+        # print(escale)
+        w = (pix / lwr) ** 0.5
+        w = int(w)
+        h = w * lwr
+        h = int(h)
+        if h >= row:
+            h = row - 1
+        if w >= col:
+            w = col - 1
+        # print(f'i={row - h},j={col - w},w={w},h={h},row={row},col={col}')
+        i = np.random.randint(0, (row - h))
+        j = np.random.randint(0, (col - w))
+
+        a = transforms.functional.erase(a, i, j, h, w, 0)
+        b = transforms.functional.erase(a, i, j, h, w, 0)
+        # print(f'zengqianghou{a.shape}')
 
     images = [a, b]
     return images
