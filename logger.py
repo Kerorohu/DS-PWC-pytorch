@@ -1,4 +1,3 @@
-import tensorflow as tf
 import numpy as np
 import scipy.misc
 from io import BytesIO
@@ -86,7 +85,7 @@ class Logger(object):
         self.writer.add_summary(summary, step)
         '''
         print(values.shape)
-        tf.summary.histogram(name=tag, data=values, step=step)
+        self.writer.add_histogram(tag=tag, data=values, step=step)
         self.writer.flush()
 
     def close_summary(self):

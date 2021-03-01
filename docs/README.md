@@ -74,11 +74,14 @@ $$cv^l(x_1,x_2)=\frac{1}{N}(c^l_1(x_1))^Tc^l_w(x_2)$$
 win10下运行demo 命令：
 预测：
 ```
-python main.py --input-norm --batch-norm --residual --corr_activation pred --load example/SintelFinal-200K-noBN_SintelFinal-148K-BN.pkl -i example/1.png example/2.png
+python3 main.py --input-norm --batch-norm --residual --corr_activation pred --load example/SintelFinal-200K-noBN_SintelFinal-148K-BN.pkl -i example/1.png example/2.png
 ```
 训练：
 ```
 python main.py --input-norm --batch-norm --residual --corr_activation --num_workers 4 train --dataset FlyingChairs --dataset_dir D:\DataSet\FlyingChairs_release\data --batch_size 4 --mixup //--load D:\Project\GithubProject\PWC-Net_pytorch\train_log\20201222-141830\500.pkl
+```
+```
+python3 main.py --input-norm --batch-norm --residual --corr_activation --num_workers 8 train --dataset FlyingChairs --dataset_dir /home/tp/keroro/download/dataset/FlyingChairs_release/data/ --batch_size 8 --mixup --lr 1e-4
 ```
 
 ### 代码参数设置
@@ -116,3 +119,7 @@ python main.py --input-norm --batch-norm --residual --corr_activation --num_work
 **创建配置文件**：`conda env export > pwc.yaml`
 **使用配置文件导入**:`conda env create -f pwc.yaml`
 考虑IEICE
+https://blog.csdn.net/sinat_23619409/article/details/85220561
+
+mixup相关理论
+https://blog.csdn.net/u013841196/article/details/81049968

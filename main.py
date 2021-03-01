@@ -1,6 +1,9 @@
+import sys
 from datetime import datetime
 import argparse
 import imageio
+
+sys.path.remove('/opt/ros/kinetic/lib/python2.7/dist-packages')
 import cv2
 import numpy as np
 import torch
@@ -22,6 +25,8 @@ from logger import Logger
 from pathlib import Path
 from flow_utils import (vis_flow, save_flow)
 
+global i
+i = 1
 
 def main():
     parser = argparse.ArgumentParser(description='',
@@ -84,11 +89,11 @@ def main():
     train_parser.add_argument('--batch_size', default=8, type=int, help='mini-batch size')
     train_parser.add_argument('--dataset_dir', type=str, required=True)
     train_parser.add_argument('--dataset', type=str,
-                              choices=['FlyingChairs', 'FlyingThings', 'SintelFinal', 'SintelClean', 'KITTI'],
+                              choices=['Sintel', 'FlyingChairs', 'FlyingThings', 'SintelFinal', 'SintelClean', 'KITTI'],
                               required=True)
     train_parser.add_argument('--mixup', action='store_true')
-    train_parser.add_argument('--mixup_alpha', default=0.2, type=float, help='beta parm')
-    train_parser.add_argument('--mixup_prb', default=0.5, type=float, help='mixup probability')
+    train_parser.add_argument('--mixup_alpha', default=0.4, type=float, help='beta parm')
+    train_parser.add_argument('--mixup_prb', default=1.0, type=float, help='mixup probability')
 
     # loss
     train_parser.add_argument('--weights', nargs='+', type=float, default=[0.32, 0.08, 0.02, 0.01, 0.005])
@@ -105,13 +110,13 @@ def main():
     train_parser.add_argument('--total_step', type=int, default=200 * 1000)
 
     # summary & log args
-    train_parser.add_argument('--log_dir', default='train_log/' + datetime.now().strftime('%Y%m%d-%H%M%S'))
+    train_parser.add_argument('--log_dir', default='./train_log/' + datetime.now().strftime('%Y%m%d-%H%M%S'))
     train_parser.add_argument('--summary_interval', type=int, default=100)
     train_parser.add_argument('--log_interval', type=int, default=100)
-    train_parser.add_argument('--checkpoint_interval', type=int, default=100)
+    train_parser.add_argument('--checkpoint_interval', type=int, default=1000)
     train_parser.add_argument('--gif_input', type=str, default=None)
     train_parser.add_argument('--gif_output', type=str, default='gif')
-    train_parser.add_argument('--gif_interval', type=int, default=100)
+    train_parser.add_argument('--gif_interval', type=int, default=1000)
     train_parser.add_argument('--max_output', type=int, default=3)
 
     # args for predict
@@ -125,7 +130,7 @@ def main():
     test_parser.add_argument('--load', type=str, required=True)
     test_parser.add_argument('--dataset_dir', type=str, required=True)
     test_parser.add_argument('--dataset', type=str,
-                             choices=['FlyingChairs', 'FlyingThings', 'SintelFinal', 'SintelClean', 'KITTI'],
+                             choices=['FlyingChairs', 'FlyingThings', 'SintelFinal', 'SintelClean', 'KITTI', 'Sintel'],
                              required=True)
 
     args = parser.parse_args()
@@ -170,8 +175,7 @@ def train(args):
     # Prepare Dataloader
     # ============================================================
     train_dataset = eval(args.dataset)(args.dataset_dir, 'train', cropper=args.crop_type, crop_shape=args.crop_shape,
-                                       resize_shape=args.resize_shape, resize_scale=args.resize_scale,
-                                       transforms=None)
+                                       resize_shape=args.resize_shape, resize_scale=args.resize_scale)
     # eval_dataset = eval(args.dataset)(args.dataset_dir, 'test', cropper=args.crop_type, crop_shape=args.crop_shape,
     #                                   resize_shape=args.resize_shape, resize_scale=args.resize_scale)
     # print(len(train_dataset))
@@ -223,9 +227,11 @@ def train(args):
         squeezer = partial(torch.squeeze, dim=2)
         # shape: B,2,H,W
         data, target = [d.to(args.device) for d in data], [t.to(args.device) for t in target]
-        # print(f'datalist={len(data[0])}')
+
         x1_raw = data[0][:, :, 0, :, :]
+        # x1_raw = x1_raw[:, [2, 1, 0], :, :]
         x2_raw = data[0][:, :, 1, :, :]
+        # x2_raw = x2_raw[:, [2, 1, 0], :, :]
         if data[0].size(0) != args.batch_size: continue
         flow_gt = target[0]
 
@@ -287,7 +293,7 @@ def train(args):
                 batch = [np.array(
                     F.interpolate(flows[l][b].unsqueeze(0),
                                   scale_factor=2 ** (len(flows) - l + 1)).detach().squeeze(
-                         0).cpu()).transpose(1, 2, 0) for l in range(len(flows) - 1)]
+                        0).cpu()).transpose(1, 2, 0) for l in range(len(flows) - 1)]
                 # for i in batch:
                 #     print(i.shape)
                 # print(flows[-1][b].detach().cpu().numpy().transpose(1,2,0))
@@ -314,11 +320,12 @@ def train(args):
             #     logger.image_summary(f'flow-lv{layer_idx}', flow_vis, step)
 
             logger.image_summary('src & tgt', [np.concatenate([i.squeeze(0), j.squeeze(0)], axis=1) for i, j in
-                                               zip(np.split(np.array(x1_raw.data.cpu()), B,
+                                               zip(np.split(np.array(x1_raw.data.cpu()).astype(np.int), B,
                                                             axis=0),
-                                                   np.split(np.array(x2_raw.data.cpu()), B,
+                                                   np.split(np.array(x2_raw.data.cpu()).astype(np.int), B,
                                                             axis=0))],
                                  step)
+            # print(f'{step}={x1_raw.data}')
 
         # save model
         if step % args.checkpoint_interval == 0:
@@ -342,6 +349,7 @@ def pred(args):
     model = Net(args).to(args.device)
     model.load_state_dict(torch.load(args.load))
     cstime = time.time() - time_back
+    time_back = time.time()
     print("初始化耗时%fs" % cstime)
     # Load Data
     # ============================================================
@@ -392,8 +400,7 @@ def pred(args):
         flows, summaries = model(x)
     flow = flows[-1].cpu()
     # print(flow.shape)
-    flow = np.array(flow.data).transpose(0, 2, 3, 1).squeeze(0)
-    # flow = flow[[[1, 0]]]
+    flow = np.array(flow.data).transpose(0, 2, 3, 1).squeeze(0).astype(np.int)
     # print(flow.shape)
     hstime = time.time() - time_back
     print("预测耗时%fs" % hstime)
@@ -430,13 +437,14 @@ def test(args):
         # ============================================================
         t_start = time.time()
         data, target = [d.to(args.device) for d in data], [t.to(args.device) for t in target]
+        print(data[0].shape)
+        print(target[0].shape)
         with torch.no_grad():
             flows, summaries = model(data[0])
         time_logs.append(time.time() - t_start)
 
         # Compute EPE
         # ============================================================
-        print(flows.shape)
         flow = flows[-1].cpu()
         flow = np.array(flow.data).transpose(0, 2, 3, 1).squeeze(0)
         print(flow.shape)

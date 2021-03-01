@@ -44,15 +44,17 @@ def window(seq, n=2):
         yield result
 
 
-def mixup(data_iter, alpha=0.2, probability=0.5):
+
+
+def mixup(data_iter, alpha, probability):
     x, y = next(data_iter)
     if random.random() <= probability:
         l = np.random.beta(alpha, alpha)
         index = torch.randperm(x[0].size(0))
         # print(x[0].shape)
-        images_a, images_b = x[0], x[0][index]
-        labels_a, labels_b = y[0], y[0][index]
-        # print("mixup!!!")
+        images_a, images_b = x[0], x[0][index, :, :, :]
+        labels_a, labels_b = y[0], y[0][index, :, :, :]
+        # print(f'l={l},index={index}')
         mixed_images = l * images_a + (1 - l) * images_b
         mixed_labels = l * labels_a + (1 - l) * labels_b
         x = [mixed_images]
@@ -70,16 +72,16 @@ class BaseDataset(Dataset, metaclass=ABCMeta):
 
     def __getitem__(self, idx):
         img1_path, img2_path, flow_path = self.samples[idx]
-        # img1, img2 = map(imageio.imread, (img1_path, img2_path))
-        img1, img2 = map(cv2.imread, (img1_path, img2_path))
+        img1, img2 = map(imageio.imread, (img1_path, img2_path))
+        # img1, img2 = map(cv2.imread, (img1_path, img2_path))
         flow = load_flow(flow_path)
 
         if self.color == 'gray':
             img1 = cv2.cvtColor(img1, cv2.COLOR_BGR2GRAY)[:, :, np.newaxis]
             img2 = cv2.cvtColor(img2, cv2.COLOR_BGR2GRAY)[:, :, np.newaxis]
-        else:
-            img1 = cv2.cvtColor(img1, cv2.COLOR_BGR2RGB)
-            img2 = cv2.cvtColor(img1, cv2.COLOR_BGR2RGB)
+        # else:
+        #     img1 = cv2.cvtColor(img1, cv2.COLOR_BGR2RGB)
+        #     img2 = cv2.cvtColor(img1, cv2.COLOR_BGR2RGB)
 
         images = [img1, img2]
         if self.crop_shape is not None:
@@ -100,8 +102,6 @@ class BaseDataset(Dataset, metaclass=ABCMeta):
 
         # seed = np.random.randint(2147483647)  # make a seed with numpy generator
         # random.seed(seed)
-        if self.transforms is not None:
-            ...
 
         if self.train_or_test == 'test':
             H, W = img1.shape[:2]
