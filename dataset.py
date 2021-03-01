@@ -12,6 +12,7 @@ from flow_utils import load_flow
 from abc import abstractmethod, ABCMeta
 from torchvision import transforms
 
+
 class StaticRandomCrop(object):
     def __init__(self, image_size, crop_size):
         self.th, self.tw = crop_size
@@ -44,12 +45,18 @@ def window(seq, n=2):
         yield result
 
 
-def mixup(data_iter, alpha=0.2, probability=0.5):
+def mixup(data_iter, alpha=0.2, probability=0.5,):
     x, y = next(data_iter)
     if random.random() <= probability:
         l = np.random.beta(alpha, alpha)
         index = torch.randperm(x[0].size(0))
         # print(x[0].shape)
+        # images_a1 = x[0][:, :, 0, :, :]
+        # images_a2 = x[0][:, :, 1, :, :]
+        # images_b1 = x[0][index][:, :, 0, :, :]
+        # images_b2 = x[0][index][:, :, 0, :, :]
+        # mixed_images = [images_a1 * l + (1 - l) * images_b1, images_a2 * l + (1 - l) * images_b2]
+        # mixed_images = mixed_images.transpose(1, 2, 0, 3, 4)
         images_a, images_b = x[0], x[0][index]
         labels_a, labels_b = y[0], y[0][index]
         # print("mixup!!!")

@@ -108,9 +108,9 @@ def main():
 
     # summary & log args
     train_parser.add_argument('--log_dir', default='train_log/' + datetime.now().strftime('%Y%m%d-%H%M%S'))
-    train_parser.add_argument('--summary_interval', type=int, default=100)
-    train_parser.add_argument('--log_interval', type=int, default=100)
-    train_parser.add_argument('--checkpoint_interval', type=int, default=100)
+    train_parser.add_argument('--summary_interval', type=int, default=50)
+    train_parser.add_argument('--log_interval', type=int, default=50)
+    train_parser.add_argument('--checkpoint_interval', type=int, default=20)
     train_parser.add_argument('--gif_input', type=str, default=None)
     train_parser.add_argument('--gif_output', type=str, default='gif')
     train_parser.add_argument('--gif_interval', type=int, default=100)
