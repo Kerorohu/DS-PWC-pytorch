@@ -301,7 +301,9 @@ def train(args):
                 vis = batch + [flows[-1][b].detach().cpu().numpy().transpose(1, 2, 0),
                                flow_gt[b].detach().cpu().numpy().transpose(1, 2, 0)]
                 vis = np.concatenate(list(map(vis_flow, vis)), axis=1)
-                vis_batch.append(vis.transpose(2, 0, 1))
+                print(f'vis={vis}')
+                print(f'vis.astype')
+                vis_batch.append(vis.transpose(2, 0, 1).astype(np.int))
             logger.image_summary(f'flow', vis_batch, step)
 
             # for l, x2_warp in enumerate(summaries['x2_warps']):
