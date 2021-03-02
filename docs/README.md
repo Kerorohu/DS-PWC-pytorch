@@ -6,8 +6,8 @@
 ### 概述
 PWC-Net相对于FlowNet2的模型大小小17倍  
 
-  1. 优势
-  2. 劣势  
+  1. 优势：速度快、参数量少
+  2. 劣势：相比最新的模型相比准确率要差一点  
 
 ### 卷积神经网络架构  
 ![PWC-Net网络架构](pwc-net架构.png)
@@ -16,6 +16,7 @@ PWC-Net相对于FlowNet2的模型大小小17倍
 - 降采样方法位使用卷积滤波器
 - 特征通道的数量分别为16,32,64,96,128和196
 #### 翘曲层（Warping layer）
+理论来自：[High Accuracy Optical Flow Estimation Based on aTheory for Warping](sci-hub.se/10.1007/978-3-540-24673-2_3)
 **作用**：对于非平移运动，翘曲可以补偿一些几何畸变，使输出更平滑。
 **方法**：将每层金字塔得到的光流上采样与金字塔每层的特征图进行双线性插值。
 >**双线性插值**在数学上，双线性插值是有两个变量的插值函数的线性插值扩展，其核心思想是在两个方向分别进行一次线性插值    
@@ -66,11 +67,12 @@ $$cv^l(x_1,x_2)=\frac{1}{N}(c^l_1(x_1))^Tc^l_w(x_2)$$
 ### 数据库
 [KITTI2015](http://www.cvlibs.net/datasets/kitti/eval_scene_flow.php?benchmark=flow)  
 [Sintel](http://sintel.is.tue.mpg.de/downloads)
-
+[FlyingThings](https://lmb.informatik.uni-freiburg.de/data/SceneFlowDatasets_CVPR16/Release_april16/data/FlyingThings3D/derived_data/flyingthings3d__optical_flow.tar.bz2)
+[FlyingChairs](https://lmb.informatik.uni-freiburg.de/data/FlyingChairs/FlyingChairs.zip)
 
 ## PWC-Net Pytorch实现
 包含训练实现 https://github.com/RanhaoKang/PWC-Net_pytorch  
-
+本人模型改进及数据增强实现：https://github.com/Kerorohu/DS-PWC-pytorch
 win10下运行demo 命令：
 预测：
 ```
@@ -78,7 +80,7 @@ python3 main.py --input-norm --batch-norm --residual --corr_activation pred --lo
 ```
 训练：
 ```
-python main.py --input-norm --batch-norm --residual --corr_activation --num_workers 4 train --dataset FlyingChairs --dataset_dir D:\DataSet\FlyingChairs_release\data --batch_size 4 --mixup //--load D:\Project\GithubProject\PWC-Net_pytorch\train_log\20201222-141830\500.pkl
+python main.py --input-norm --batch-norm --residual --corr_activation --num_workers 4 train --dataset FlyingChairs --dataset_dir D:\DataSet\FlyingChairs_release\data --batch_size 4 --mixup//--load D:\Project\GithubProject\PWC-Net_pytorch\train_log\20201222-141830\500.pkl
 ```
 ```
 python3 main.py --input-norm --batch-norm --residual --corr_activation --num_workers 8 train --dataset FlyingChairs --dataset_dir /home/tp/keroro/download/dataset/FlyingChairs_release/data/ --batch_size 8 --mixup --lr 1e-4
@@ -96,16 +98,26 @@ python3 main.py --input-norm --batch-norm --residual --corr_activation --num_wor
 |output_level|int|没懂|4|
 |corr|string|计算相关层得方法|cost_volume|
 |search_range|int|相关层范围d|4|
-|corr_activation|store_true|激活函数？|false|
+|corr_activation|store_true|成本量计算层激活层|false|
 |residual|store_true|残差|false|
 |input_shape|int|输入图片得形状|(3, 2, 384, 448)|
+|**参数统计**|---------|----------|----------|
+|summary||参数统计|
+|i / input_shape|int|输入数据的大小|（3,2,384,448）|
 |**训练参数**|---------|---------|----------|
 |corp_type|string|没懂|random|
 |load|string|读取预训练模型|无|
 |dataset|string|数据集类型|无|
 |dataset_dir|string|数据集地址|无|
 |lr|科学计数法|学习率设置|1e-4|
+|optimizer|string|优化器选择|Adam|
 |total_step|int|总迭代次数|200 * 1000|
+|**数据增强参数**|----------|-----------|-------------|
+|mixup|store_true|数据增强-mixup|false|
+|mixup_alpha|float|mixup比例波动系数|0.2|
+|mixup_prb|float|mixup增强概率|0.5|
+|no_transforms|store_false|数据增强-颜色变化-擦除|True|
+|erasing|float|数级增强-擦除概率|0.7|
 |**预测参数**|---------|---------|----------|
 |i / input|string|两张图片的地址|无|
 |o / output|string|输出.flo的地址|无|

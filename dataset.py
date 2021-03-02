@@ -10,6 +10,7 @@ import cv2
 from functools import partial
 from flow_utils import load_flow
 from abc import abstractmethod, ABCMeta
+from torchvision import transforms
 
 
 class StaticRandomCrop(object):
@@ -44,8 +45,6 @@ def window(seq, n=2):
         yield result
 
 
-
-
 def mixup(data_iter, alpha, probability):
     x, y = next(data_iter)
     if random.random() <= probability:
@@ -60,6 +59,58 @@ def mixup(data_iter, alpha, probability):
         x = [mixed_images]
         y = [mixed_labels]
     return x, y
+
+
+def enhance(images, prb=0.7):
+    topli = transforms.ToPILImage()
+    totensor = transforms.ToTensor()
+    a = images[0]
+    b = images[1]
+    # print(f'zengqiangqian{a.shape}')
+    randombright = np.random.normal(loc=1, scale=0.04 ** 0.5)
+    randomcontrast = np.random.uniform(0.2, 1.4)
+    randomgamma = np.random.uniform(0.7, 1.5)
+    randomhue = np.random.uniform(-0.1, 0.1)
+
+    a = topli(a)
+    b = topli(b)
+    a = transforms.functional.adjust_brightness(a, randombright)
+    b = transforms.functional.adjust_brightness(b, randombright)
+    a = transforms.functional.adjust_contrast(a, randomcontrast)
+    b = transforms.functional.adjust_contrast(b, randomcontrast)
+    a = transforms.functional.adjust_gamma(a, randomgamma)
+    b = transforms.functional.adjust_gamma(b, randomgamma)
+    a = transforms.functional.adjust_hue(a, randomhue)
+    b = transforms.functional.adjust_hue(b, randomhue)
+    a = totensor(a)
+    b = totensor(b)
+
+    lwr = np.random.uniform(0.33, 3.33)
+    escale = np.random.uniform(0.02, 0.15)
+
+    if np.random.rand() < prb:
+        row = a.size()[1]
+        col = a.size()[2]
+        pix = (row * col) * escale
+        # print(escale)
+        w = (pix / lwr) ** 0.5
+        w = int(w)
+        h = w * lwr
+        h = int(h)
+        if h >= row:
+            h = row - 1
+        if w >= col:
+            w = col - 1
+        # print(f'i={row - h},j={col - w},w={w},h={h},row={row},col={col}')
+        i = np.random.randint(0, (row - h))
+        j = np.random.randint(0, (col - w))
+
+        a = transforms.functional.erase(a, i, j, h, w, 0)
+        b = transforms.functional.erase(a, i, j, h, w, 0)
+        # print(f'zengqianghou{a.shape}')
+
+    images = [a, b]
+    return images
 
 
 class BaseDataset(Dataset, metaclass=ABCMeta):
@@ -100,8 +151,17 @@ class BaseDataset(Dataset, metaclass=ABCMeta):
             images = list(map(resizer, images))
             flow = resizer(flow)
 
-        # seed = np.random.randint(2147483647)  # make a seed with numpy generator
-        # random.seed(seed)
+        # make a seed with numpy generator
+        seed = np.random.randint(2147483647)
+        random.seed(seed)
+        if self.transforms is not None:
+            # print(f'zhiqian{images[0].shape}')
+            images = enhance(images)
+            res = []
+            for a in images:
+                # print(f'zhihou{a.shape}')
+                res.append(a.numpy().transpose(1, 2, 0))
+            images = res
 
         if self.train_or_test == 'test':
             H, W = img1.shape[:2]
