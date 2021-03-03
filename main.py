@@ -175,8 +175,7 @@ def train(args):
     # Prepare Dataloader
     # ============================================================
     train_dataset = eval(args.dataset)(args.dataset_dir, 'train', cropper=args.crop_type, crop_shape=args.crop_shape,
-                                       resize_shape=args.resize_shape, resize_scale=args.resize_scale,
-                                       transforms=args.no_transforms)
+                                       resize_shape=args.resize_shape, resize_scale=args.resize_scale, transforms=args.no_transforms)
     # eval_dataset = eval(args.dataset)(args.dataset_dir, 'test', cropper=args.crop_type, crop_shape=args.crop_shape,
     #                                   resize_shape=args.resize_shape, resize_scale=args.resize_scale)
     # print(len(train_dataset))
@@ -231,7 +230,8 @@ def train(args):
         # print(f'datalist={len(data[0])}')
         x1_raw = data[0][:, :, 0, :, :]
         x2_raw = data[0][:, :, 1, :, :]
-        # x2_raw = x2_raw[:, [2, 1, 0], :, :]
+        # x1_raw = x1_raw[:, [0, 1, 2], :, :]
+        # x2_raw = x2_raw[:, [0, 2, 1], :, :]
         if data[0].size(0) != args.batch_size: continue
         flow_gt = target[0]
 
@@ -301,10 +301,8 @@ def train(args):
                 vis = batch + [flows[-1][b].detach().cpu().numpy().transpose(1, 2, 0),
                                flow_gt[b].detach().cpu().numpy().transpose(1, 2, 0)]
                 vis = np.concatenate(list(map(vis_flow, vis)), axis=1)
-                print(f'vis={vis}')
-                print(f'vis.astype')
-                vis_batch.append(vis.transpose(2, 0, 1).astype(np.int))
-            logger.image_summary(f'flow', vis_batch, step)
+                vis_batch.append(vis.transpose(2, 0, 1))
+            logger.image_summary(f'flow', np.array(vis_batch), step)
 
             # for l, x2_warp in enumerate(summaries['x2_warps']):
             #     out = [i.squeeze(0) for i in np.split(np.array(x2_warp.data).transpose(0,2,3,1), B, axis = 0)]
@@ -320,13 +318,15 @@ def train(args):
             #     flow_vis = 
             #     # flow_gt_vis = [vis_flow(i.squeeze()) for i in np.split(np.array(flow_gt_pyramid[layer_idx].data).transpose(0,2,3,1), B, axis = 0)][:min(B, args.max_output)]
             #     logger.image_summary(f'flow-lv{layer_idx}', flow_vis, step)
+            # print([np.concatenate([i.squeeze(0), j.squeeze(0)], axis=1) for i, j in
+            #                                    zip(np.split(np.array(x1_raw.data.cpu()).astype(np.int), B,
+            #                                                 axis=0),
+            #                                        np.split(np.array(x2_raw.data.cpu()).astype(np.int), B,
+            #                                                 axis=0))][0].shape)
+            # print(np.array(x1_raw.data.cpu().astype(np.int)))
+            logger.image_summary('src', np.array(x1_raw.data.cpu()), step)
+            logger.image_summary('tgt', np.array(x2_raw.data.cpu()), step)
 
-            logger.image_summary('src & tgt', [np.concatenate([i.squeeze(0), j.squeeze(0)], axis=1) for i, j in
-                                               zip(np.split(np.array(x1_raw.data.cpu()).astype(np.int), B,
-                                                            axis=0),
-                                                   np.split(np.array(x2_raw.data.cpu()).astype(np.int), B,
-                                                            axis=0))],
-                                 step)
 
         # save model
         if step % args.checkpoint_interval == 0:

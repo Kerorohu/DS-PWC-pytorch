@@ -8,9 +8,11 @@ import torch
 import random
 import cv2
 from functools import partial
+
+from torchvision import transforms
+
 from flow_utils import load_flow
 from abc import abstractmethod, ABCMeta
-from torchvision import transforms
 
 
 class StaticRandomCrop(object):
@@ -64,9 +66,10 @@ def mixup(data_iter, alpha, probability):
 def enhance(images, prb=0.7):
     topli = transforms.ToPILImage()
     totensor = transforms.ToTensor()
+
     a = images[0]
     b = images[1]
-    # print(f'zengqiangqian{a.shape}')
+
     randombright = np.random.normal(loc=1, scale=0.04 ** 0.5)
     randomcontrast = np.random.uniform(0.2, 1.4)
     randomgamma = np.random.uniform(0.7, 1.5)
@@ -92,23 +95,18 @@ def enhance(images, prb=0.7):
         row = a.size()[1]
         col = a.size()[2]
         pix = (row * col) * escale
-        # print(escale)
         w = (pix / lwr) ** 0.5
         w = int(w)
-        h = w * lwr
-        h = int(h)
+        h = (int)(w * lwr)
         if h >= row:
             h = row - 1
         if w >= col:
             w = col - 1
-        # print(f'i={row - h},j={col - w},w={w},h={h},row={row},col={col}')
         i = np.random.randint(0, (row - h))
         j = np.random.randint(0, (col - w))
-
+        # print(f'i{i} j{j} h{h} w{w}')
         a = transforms.functional.erase(a, i, j, h, w, 0)
-        b = transforms.functional.erase(a, i, j, h, w, 0)
-        # print(f'zengqianghou{a.shape}')
-
+        b = transforms.functional.erase(b, i, j, h, w, 0)
     images = [a, b]
     return images
 
@@ -128,12 +126,11 @@ class BaseDataset(Dataset, metaclass=ABCMeta):
         flow = load_flow(flow_path)
 
         if self.color == 'gray':
-            img1 = cv2.cvtColor(img1, cv2.COLOR_BGR2GRAY)[:, :, np.newaxis]
-            img2 = cv2.cvtColor(img2, cv2.COLOR_BGR2GRAY)[:, :, np.newaxis]
+            img1 = cv2.cvtColor(img1, cv2.COLOR_RGB2GRAY)[:, :, np.newaxis]
+            img2 = cv2.cvtColor(img2, cv2.COLOR_RGB2GRAY)[:, :, np.newaxis]
         # else:
         #     img1 = cv2.cvtColor(img1, cv2.COLOR_BGR2RGB)
         #     img2 = cv2.cvtColor(img1, cv2.COLOR_BGR2RGB)
-
         images = [img1, img2]
         if self.crop_shape is not None:
             cropper = StaticRandomCrop(img1.shape[:2],
@@ -151,15 +148,14 @@ class BaseDataset(Dataset, metaclass=ABCMeta):
             images = list(map(resizer, images))
             flow = resizer(flow)
 
-        # make a seed with numpy generator
-        seed = np.random.randint(2147483647)
+        seed = np.random.randint(2147483647)  # make a seed with numpy generator
         random.seed(seed)
         if self.transforms is not None:
-            # print(f'zhiqian{images[0].shape}')
+            #print("transform start!")
             images = enhance(images)
             res = []
             for a in images:
-                # print(f'zhihou{a.shape}')
+                # print(a)
                 res.append(a.numpy().transpose(1, 2, 0))
             images = res
 
@@ -174,7 +170,6 @@ class BaseDataset(Dataset, metaclass=ABCMeta):
 
         images = np.array(images).transpose(3, 0, 1, 2)
         flow = flow.transpose(2, 0, 1)
-
         images = torch.from_numpy(images.astype(np.float32))
         flow = torch.from_numpy(flow.astype(np.float32))
 
@@ -248,7 +243,7 @@ class FlyingThings(BaseDataset):
 class Sintel(BaseDataset):
 
     def __init__(self, dataset_dir, train_or_test, mode='final', color='rgb', cropper='random', crop_shape=None,
-                 resize_shape=None, resize_scale=None):
+                 resize_shape=None, resize_scale=None, transforms=None):
         super(Sintel, self).__init__()
         self.mode = mode
         self.color = color
@@ -257,6 +252,7 @@ class Sintel(BaseDataset):
         self.resize_shape = resize_shape
         self.resize_scale = resize_scale
 
+        self.transforms = transforms
         self.dataset_dir = dataset_dir
         self.train_or_test = train_or_test
         p = Path(dataset_dir) / (train_or_test + '.txt')
@@ -282,16 +278,18 @@ class Sintel(BaseDataset):
 
 class SintelFinal(Sintel):
     def __init__(self, dataset_dir, train_or_test, color='rgb', cropper='random', crop_shape=None, resize_shape=None,
-                 resize_scale=None):
+                 resize_scale=None,transforms=None):
         super(SintelFinal, self).__init__(dataset_dir, train_or_test, mode='final', color=color, cropper=cropper,
-                                          crop_shape=crop_shape, resize_shape=resize_shape, resize_scale=resize_scale)
+                                          crop_shape=crop_shape, resize_shape=resize_shape, resize_scale=resize_scale,
+                                          transforms=transforms)
 
 
 class SintelClean(Sintel):
     def __init__(self, dataset_dir, train_or_test, color='rgb', cropper='random', crop_shape=None, resize_shape=None,
                  resize_scale=None):
         super(SintelClean, self).__init__(dataset_dir, train_or_test, mode='clean', color=color, cropper=cropper,
-                                          crop_shape=crop_shape, resize_shape=resize_shape, resize_scale=resize_scale)
+                                          crop_shape=crop_shape, resize_shape=resize_shape, resize_scale=resize_scale,
+                                          transforms=transforms)
 
 
 # KITTI
