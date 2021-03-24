@@ -91,7 +91,7 @@ def main():
                               required=True)
     train_parser.add_argument('--mixup', action='store_true')
     train_parser.add_argument('--mixup_alpha', default=0.4, type=float, help='beta parm')
-    train_parser.add_argument('--mixup_prb', default=1.0, type=float, help='mixup probability')
+    train_parser.add_argument('--mixup_prb', default=0.9, type=float, help='mixup probability')
     train_parser.add_argument('--no_transforms', action='store_false')
     train_parser.add_argument('--erasing', type=float, default=0.7)
 
@@ -111,12 +111,12 @@ def main():
 
     # summary & log args
     train_parser.add_argument('--log_dir', default='./train_log/' + datetime.now().strftime('%Y%m%d-%H%M%S'))
-    train_parser.add_argument('--summary_interval', type=int, default=100)
-    train_parser.add_argument('--log_interval', type=int, default=100)
-    train_parser.add_argument('--checkpoint_interval', type=int, default=1000)
+    train_parser.add_argument('--summary_interval', type=int, default=1000)
+    train_parser.add_argument('--log_interval', type=int, default=1000)
+    train_parser.add_argument('--checkpoint_interval', type=int, default=10000)
     train_parser.add_argument('--gif_input', type=str, default=None)
     train_parser.add_argument('--gif_output', type=str, default='gif')
-    train_parser.add_argument('--gif_interval', type=int, default=1000)
+    train_parser.add_argument('--gif_interval', type=int, default=10000)
     train_parser.add_argument('--max_output', type=int, default=3)
 
     # args for predict
@@ -175,7 +175,8 @@ def train(args):
     # Prepare Dataloader
     # ============================================================
     train_dataset = eval(args.dataset)(args.dataset_dir, 'train', cropper=args.crop_type, crop_shape=args.crop_shape,
-                                       resize_shape=args.resize_shape, resize_scale=args.resize_scale, transforms=args.no_transforms)
+                                       resize_shape=args.resize_shape, resize_scale=args.resize_scale,
+                                       transforms=args.no_transforms)
     # eval_dataset = eval(args.dataset)(args.dataset_dir, 'test', cropper=args.crop_type, crop_shape=args.crop_shape,
     #                                   resize_shape=args.resize_shape, resize_scale=args.resize_scale)
     # print(len(train_dataset))
@@ -326,7 +327,6 @@ def train(args):
             # print(np.array(x1_raw.data.cpu().astype(np.int)))
             logger.image_summary('src', np.array(x1_raw.data.cpu()), step)
             logger.image_summary('tgt', np.array(x2_raw.data.cpu()), step)
-
 
         # save model
         if step % args.checkpoint_interval == 0:

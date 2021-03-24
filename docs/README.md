@@ -135,3 +135,4 @@ https://blog.csdn.net/sinat_23619409/article/details/85220561
 
 mixup相关理论
 https://blog.csdn.net/u013841196/article/details/81049968
+python3 main.py --input-norm --batch-norm --residual --corr_activation --num_workers 8 train --dataset FlyingChairs --dataset_dir /home/tp/keroro/download/dataset/FlyingChairs_release/data/ --batch_size 8 --lr 2.5e-5 --total_step 200000 --log_dir /home/tp/keroro/log/FlyingChairs800k_bn --load /home/tp/keroro/log/FlyingChairs600k_bn/20000.pkl --mixup

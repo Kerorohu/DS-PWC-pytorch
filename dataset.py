@@ -1,3 +1,5 @@
+#import sys
+
 from PIL import Image
 from torch.utils.data import Dataset
 from pathlib import Path
@@ -6,6 +8,8 @@ import numpy as np
 import imageio
 import torch
 import random
+
+#sys.path.remove('/opt/ros/kinetic/lib/python2.7/dist-packages')
 import cv2
 from functools import partial
 
@@ -47,7 +51,59 @@ def window(seq, n=2):
         yield result
 
 
-def mixup(data_iter, alpha, probability):
+def erasing(images):
+    # print(images.shape)
+    a = images[:, 0, :, :]
+    b = images[:, 1, :, :]
+    # print(f'b={b.shape}')
+    lwr = np.random.uniform(0.33, 3.33)
+    escale = np.random.uniform(0.02, 0.10)
+    randomeraser = np.random.rand()
+    randomeraseg = np.random.rand()
+    randomeraseb = np.random.rand()
+    row = a.size()[1]
+    col = a.size()[2]
+    pix = (row * col) * escale
+    w = (pix / lwr) ** 0.5
+    w = int(w)
+    h = (int)(w * lwr)
+    if h >= row:
+        h = row - 1
+    if w >= col:
+        w = col - 1
+    i = np.random.randint(0, (row - h))
+    j = np.random.randint(0, (col - w))
+    # print(f'i{i} j{j} h{h} w{w}')
+    images[0, 0, :, :] = transforms.functional.erase(a[0], i, j, h, w, randomeraser)
+    images[0, 1, :, :] = transforms.functional.erase(b[0], i, j, h, w, randomeraser)
+    images[1, 0, :, :] = transforms.functional.erase(a[1], i, j, h, w, randomeraseg)
+    images[1, 1, :, :] = transforms.functional.erase(b[1], i, j, h, w, randomeraseg)
+    images[2, 0, :, :] = transforms.functional.erase(a[2], i, j, h, w, randomeraseb)
+    images[2, 1, :, :] = transforms.functional.erase(b[2], i, j, h, w, randomeraseb)
+    return images
+
+
+def new_mixup(data_iter, alpha, probability, prb=0.1):
+    x, y = next(data_iter)
+    if random.random() <= probability:
+        l = np.random.beta(alpha, alpha)
+        index = torch.randperm(x[0].size(0))
+        # print(x[0].shape)
+        images_a, images_b = x[0], x[0][index, :, :, :]
+        labels_a, labels_b = y[0], y[0][index, :, :, :]
+        # print(f'l={l},index={index}')
+        # mixed_images = l * images_a + (1 - l) * images_b
+        # mixed_labels = l * labels_a + (1 - l) * labels_b
+        # if random.random() <= prb:
+        #     for i, image in enumerate(mixed_images):
+        #         # print(image.shape)
+        #         mixed_images[i] = erasing(image)
+        # x = [mixed_images]
+        # y = [mixed_labels]
+    return x, y
+
+
+def mixup(data_iter, alpha, probability, prb=0.1):
     x, y = next(data_iter)
     if random.random() <= probability:
         l = np.random.beta(alpha, alpha)
@@ -58,15 +114,19 @@ def mixup(data_iter, alpha, probability):
         # print(f'l={l},index={index}')
         mixed_images = l * images_a + (1 - l) * images_b
         mixed_labels = l * labels_a + (1 - l) * labels_b
+        if random.random() <= prb:
+            for i, image in enumerate(mixed_images):
+                # print(image.shape)
+                mixed_images[i] = erasing(image)
         x = [mixed_images]
         y = [mixed_labels]
     return x, y
 
 
-def enhance(images, prb=0.7):
+# prb指suiji ca chu gai lu
+def enhance(images, prb=0.2):
     topli = transforms.ToPILImage()
     totensor = transforms.ToTensor()
-
     a = images[0]
     b = images[1]
 
@@ -88,25 +148,6 @@ def enhance(images, prb=0.7):
     a = totensor(a)
     b = totensor(b)
 
-    lwr = np.random.uniform(0.33, 3.33)
-    escale = np.random.uniform(0.02, 0.15)
-
-    if np.random.rand() < prb:
-        row = a.size()[1]
-        col = a.size()[2]
-        pix = (row * col) * escale
-        w = (pix / lwr) ** 0.5
-        w = int(w)
-        h = (int)(w * lwr)
-        if h >= row:
-            h = row - 1
-        if w >= col:
-            w = col - 1
-        i = np.random.randint(0, (row - h))
-        j = np.random.randint(0, (col - w))
-        # print(f'i{i} j{j} h{h} w{w}')
-        a = transforms.functional.erase(a, i, j, h, w, 0)
-        b = transforms.functional.erase(b, i, j, h, w, 0)
     images = [a, b]
     return images
 
@@ -121,9 +162,10 @@ class BaseDataset(Dataset, metaclass=ABCMeta):
 
     def __getitem__(self, idx):
         img1_path, img2_path, flow_path = self.samples[idx]
+        flowp = Path(flow_path)
+        flow = load_flow(flow_path)
         img1, img2 = map(imageio.imread, (img1_path, img2_path))
         # img1, img2 = map(cv2.imread, (img1_path, img2_path))
-        flow = load_flow(flow_path)
 
         if self.color == 'gray':
             img1 = cv2.cvtColor(img1, cv2.COLOR_RGB2GRAY)[:, :, np.newaxis]
@@ -151,7 +193,7 @@ class BaseDataset(Dataset, metaclass=ABCMeta):
         seed = np.random.randint(2147483647)  # make a seed with numpy generator
         random.seed(seed)
         if self.transforms is not None:
-            #print("transform start!")
+            # print("transform start!")
             images = enhance(images)
             res = []
             for a in images:
@@ -190,7 +232,7 @@ class BaseDataset(Dataset, metaclass=ABCMeta):
 
     def split(self, samples):
         p = Path(self.dataset_dir)
-        test_ratio = 0.1
+        test_ratio = 0.0
         random.shuffle(samples)
         idx = int(len(samples) * (1 - test_ratio))
         train_samples = samples[:idx]
@@ -235,7 +277,64 @@ class FlyingChairs(BaseDataset):
 # FlyingThings
 # ============================================================
 class FlyingThings(BaseDataset):
-    def __init__(self): ...
+    def __init__(self, dataset_dir, train_or_test, mode='left', color='rgb', cropper='random', crop_shape=None,
+                 resize_shape=None, resize_scale=None, transforms=None):
+        super(FlyingThings, self).__init__()
+        self.mode = mode
+        self.color = color
+        self.cropper = cropper
+        self.crop_shape = crop_shape
+        self.resize_shape = resize_shape
+        self.resize_scale = resize_scale
+
+        self.transforms = transforms
+        self.dataset_dir = dataset_dir
+        self.train_or_test = train_or_test
+        p = Path(dataset_dir) / (train_or_test + '.txt')
+        if p.exists():
+            self.has_txt()
+        else:
+            self.has_no_txt()
+
+    def has_no_txt(self):
+        p = Path(self.dataset_dir)
+        p_img = p / self.train_or_test / 'image_clean' / self.mode
+        p_flow = p / self.train_or_test / 'flow' / self.mode
+        samples = []
+
+        pq = Path(self.dataset_dir) / self.train_or_test / ('sequence-lengths-' + self.train_or_test + '.txt')
+        ads = sorted(map(str, p_img.glob('*.png')))
+        # print(ads)
+        self.samples = []
+        # with open(pq, 'r') as f:
+        #     for i in f.readlines():
+        #         q = int(i)
+        from itertools import groupby
+        collections = [list(g) for k, g in groupby(ads, lambda x: x.split('/')[-2])]
+
+        samples = [(*i, i[0].replace('image_clean', 'flow').replace('.png', '.flo').replace('left', 'left/into_future'))
+                   for collection in collections for i
+                   in
+                   window(collection, 2)]
+
+        for i, data in enumerate(samples):
+            flow = data[2]
+            print(f'flow={flow}')
+            flowp = Path(flow)
+            if not flowp.exists():
+                del samples[i]
+                # print('delete!')
+
+        random.shuffle(samples)
+
+        if self.train_or_test == 'train':
+            with open(p / 'train.txt', 'w') as f:
+                f.writelines((','.join(i) + '\n' for i in samples))
+        elif self.train_or_test == 'val':
+            with open(p / 'test.txt', 'w') as f:
+                f.writelines((','.join(i) + '\n' for i in samples))
+
+        self.samples = samples
 
 
 # Sintel
@@ -278,7 +377,7 @@ class Sintel(BaseDataset):
 
 class SintelFinal(Sintel):
     def __init__(self, dataset_dir, train_or_test, color='rgb', cropper='random', crop_shape=None, resize_shape=None,
-                 resize_scale=None,transforms=None):
+                 resize_scale=None, transforms=None):
         super(SintelFinal, self).__init__(dataset_dir, train_or_test, mode='final', color=color, cropper=cropper,
                                           crop_shape=crop_shape, resize_shape=resize_shape, resize_scale=resize_scale,
                                           transforms=transforms)
@@ -304,7 +403,8 @@ class KITTI(BaseDataset):
 
 
 if __name__ == '__main__':
-    dataset = Sintel('datasets/Sintel', 'train', crop_shape=(384, 768), resize_scale=1 / 16)
+    dataset = FlyingThings('/media/tp/data/kerorohu/FlyingThings3D_subset', 'train', crop_shape=(384, 768),
+                           resize_scale=1 / 16)
 
     # for i in range(dataset.__len__()):
     #     images, flow = dataset.__getitem__(i)
@@ -320,7 +420,7 @@ if __name__ == '__main__':
 
     data_iter = iter(train_loader)
     for data, flow in data_iter:
-        print(data[0].max())
+        print(flow[0].size())
     # for i in range(dataset.__len__()):
     #     data, flow = dataset.__getitem__(i)
     #     print(data.size(), flow.size())

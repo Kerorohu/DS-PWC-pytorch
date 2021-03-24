@@ -16,6 +16,8 @@ def conv(batch_norm, in_planes, out_planes, kernel_size=3, stride=1, dilation=1)
             # ----------------------------------------------------------------------------------------------------
             nn.Conv2d(in_planes, in_planes, kernel_size=kernel_size, stride=stride, dilation=dilation,
                       padding=((kernel_size - 1) * dilation) // 2, groups=in_planes, bias=False),
+            nn.BatchNorm2d(in_planes),
+            nn.LeakyReLU(0.1, inplace=True),
             nn.Conv2d(in_planes, out_planes, kernel_size=1, padding=0, groups=1, bias=False),
             nn.BatchNorm2d(out_planes),
             nn.LeakyReLU(0.1, inplace=True)
@@ -26,6 +28,7 @@ def conv(batch_norm, in_planes, out_planes, kernel_size=3, stride=1, dilation=1)
             #          padding=((kernel_size - 1) * dilation) // 2, bias=True),
             nn.Conv2d(in_planes, in_planes, kernel_size=kernel_size, stride=stride, dilation=dilation,
                       padding=((kernel_size - 1) * dilation) // 2, groups=in_planes, bias=False),
+            nn.LeakyReLU(0.1, inplace=True),
             nn.Conv2d(in_planes, out_planes, kernel_size=1, padding=0, groups=1, bias=False),
             nn.LeakyReLU(0.1, inplace=True)
         )
